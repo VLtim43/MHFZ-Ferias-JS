@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Frontier Wiki · Items</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="../sozai/item.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <a class="brand" href="#/items">Frontier <span>Wiki</span></a>
+      <p class="nav-label">Browse</p>
+      <nav aria-label="Wiki sections">
+        <a class="nav-item active" href="#/items" aria-current="page">Items</a>
+        <span class="nav-item disabled" title="Coming later">Weapons <small>Later</small></span>
+        <span class="nav-item disabled" title="Coming later">Armor <small>Later</small></span>
+        <span class="nav-item disabled" title="Coming later">Monsters <small>Later</small></span>
+        <span class="nav-item disabled" title="Coming later">Quests <small>Later</small></span>
+        <span class="nav-item disabled" title="Coming later">Gathering <small>Later</small></span>
+      </nav>
+      <p class="sidebar-note">An easier way to explore the original Ferias data. More sections will follow.</p>
+    </aside>
+    <main class="main" id="main">
+      <header class="topbar"><span>Monster Hunter Frontier</span><span class="topbar-right">Item database</span></header>
+      <div id="content" aria-live="polite">Loading items…</div>
+    </main>
+  </div>
+</body>
+</html>
