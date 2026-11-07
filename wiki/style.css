@@ -9,10 +9,11 @@ a:hover { color: #fff; }
 .brand { display: block; font-size: 18px; font-weight: bold; margin: 5px 0 20px; }
 .brand span { color: #fff; }
 .nav-label { background: #708090; margin: 0 0 8px; padding: 3px; }
-.nav-item { display: block; padding: 5px; border-bottom: 1px solid #708090; }
+.nav-item { display: flex; align-items: center; padding: 5px; border-bottom: 1px solid #708090; gap: 7px; }
+.nav-item img, .section-icon { width: 20px; height: 20px; object-fit: contain; filter: brightness(0) invert(1); vertical-align: middle; }
+.nav-item small { margin-left: auto; }
 .nav-item.active { background: #485967; font-weight: bold; }
 .nav-item.disabled { color: #999; }
-.nav-item small { float: right; }
 .sidebar-note { margin-top: 25px; color: #bbb; font-size: 12px; }
 .main { min-width: 0; }
 .topbar { background: #1c1c1c; border-bottom: 2px ridge #708090; padding: 8px 16px; }
@@ -32,9 +33,11 @@ p { margin: 0 0 12px; }
 .recent-heading { grid-column: 1 / -1; margin: 12px 0 2px; }
 .results > .results { grid-column: 1 / -1; }
 .result { display: block; padding: 5px 7px; border: 2px ridge #708090; text-decoration: none; min-width: 0; overflow-wrap: anywhere; }
+.result > .section-icon { float: left; width: 26px; height: 26px; margin: 3px 8px 3px 0; }
 .result:hover { background: #485967; }
 .result small { display: block; color: #bbb; }
 .result-code { display: block; font: 11px monospace; color: #aaa; }
+.item-title .section-icon { width: 26px; height: 26px; margin-right: 8px; }
 .breadcrumbs { display: inline-block; margin-bottom: 10px; }
 .panel { border: 2px ridge #708090; padding: 8px; margin: 8px 0 16px; }
 .panel h2 { background: #708090; padding: 2px 5px; }
@@ -53,8 +56,10 @@ p { margin: 0 0 12px; }
 .rank-panel[hidden] { display: none; }
 .source-group { margin-bottom: 12px; }
 .source-group h3 { font-size: 14px; font-weight: normal; margin: 0; padding: 3px 6px; background: #708090; }
+.source-group h3 .section-icon { margin-right: 5px; }
 .source-list { list-style: none; margin: 0; padding: 0 5px; max-height: 300px; overflow: auto; }
 .source-list li { padding: 3px 0; overflow-wrap: anywhere; border-bottom: 1px dotted #555; }
+.monster-icon { width: 30px; height: 30px; object-fit: contain; vertical-align: middle; margin-right: 6px; filter: brightness(0) invert(1); }
 .source-list small { color: #ddd; }
 .gathering-layout { display: flex; align-items: flex-start; gap: 10px; padding-top: 5px; }
 .data-table { border-collapse: collapse; width: 100%; }

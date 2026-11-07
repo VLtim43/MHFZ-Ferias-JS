@@ -40,6 +40,28 @@ function link(label, href, className) {
   return node;
 }
 
+function sectionIcon(number) {
+  const img = element("img", "section-icon");
+  img.src = `../img/mhficons/tile${number}.png`;
+  img.alt = "";
+  return img;
+}
+
+function monsterIcon(name) {
+  const img = element("img", "monster-icon");
+  const basename = name.replace(/[^\p{L}\p{N}-]/gu, "");
+  if (!basename) return null;
+  img.src = `../img/monsicons/${basename}.webp`;
+  img.alt = "";
+  img.loading = "lazy";
+  img.addEventListener("error", () => {
+    const lower = basename.toLowerCase();
+    if (img.src.endsWith(`/${lower}.webp`)) img.remove();
+    else img.src = `../img/monsicons/${lower}.webp`;
+  });
+  return img;
+}
+
 function requirement(value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return String(value);
@@ -76,7 +98,7 @@ function listPage(query) {
     const row = link("", `#/items/${id}`, "result");
     const name = element("span");
     name.append(element("span", "", items[id][0]), element("small", "", japaneseItems[id][0]));
-    row.append(name, element("span", "result-code", id));
+    row.append(sectionIcon("036"), name, element("span", "result-code", id));
     return row;
   }
 
@@ -128,13 +150,19 @@ function getSources() {
   return sourceDataPromise;
 }
 
-function sourceGroup(parent, name, entries) {
+function sourceGroup(parent, name, entries, icon) {
   if (!entries.length) return;
   const group = element("section", "source-group");
-  group.append(element("h3", "", name));
+  const heading = element("h3", "", name);
+  if (icon) heading.prepend(sectionIcon(icon));
+  group.append(heading);
   const list = element("ul", "source-list");
   for (const entry of entries) {
     const row = element("li");
+    if (entry.monsterName) {
+      const image = monsterIcon(entry.monsterName);
+      if (image) row.append(image);
+    }
     if (entry.href) row.append(link(entry.name, entry.href));
     else row.append(element("span", "", entry.name));
     if (entry.detail) row.append(element("small", "", ` · ${entry.detail}`));
@@ -152,7 +180,9 @@ const rankIds = { Kai: "kai", Zyoui: "zyoui", Sugo: "sugo", G: "g" };
 function gatheringTable(parent, data, rank) {
   if (!data) return;
   const section = element("section", "source-group");
-  section.append(element("h3", "", "Gathering"));
+  const heading = element("h3", "", "Gathering");
+  heading.prepend(sectionIcon("017"));
+  section.append(heading);
   const layout = element("div", "gathering-layout");
   const table = element("table", "data-table gathering-table");
   const map = element("div", "map-preview");
@@ -209,7 +239,7 @@ function showSources(id, sources) {
   for (const [key, label] of Object.entries(rankNames)) {
     const monsterEntries = (monsters[key][id] || "").split(",").filter(Boolean).map(value => {
       const [monsterId, detail] = value.split("|");
-      return { name: monsters.Name[monsterId] || monsterId, detail, href: `../mons/${monsterId}_h.htm` };
+      return { name: monsters.Name[monsterId] || monsterId, monsterName: monsters.Name[monsterId], detail, href: `../mons/${monsterId}_h.htm` };
     });
     const questEntries = (quests[key][id] || "").split(",").filter(Boolean).map(value => {
       const questId = value.slice(0, 4);
@@ -231,8 +261,8 @@ function showSources(id, sources) {
     section.id = `rank-${key}`;
     section.setAttribute("role", "tabpanel");
     gatheringTable(section, gatherData, key);
-    sourceGroup(section, "Quest rewards", questEntries);
-    sourceGroup(section, "Monster drops / carves / capture", monsterEntries);
+    sourceGroup(section, "Quest rewards", questEntries, "038");
+    sourceGroup(section, "Monster drops / carves / capture", monsterEntries, "024");
     if (!gatherData && !questEntries.length && !monsterEntries.length) section.append(element("p", "empty", "No gathering, quest, or monster sources recorded for this rank."));
     rankPanels.push({ button, section, hasData: Boolean(gatherData || questEntries.length || monsterEntries.length) });
     tabs.append(button);
@@ -270,7 +300,9 @@ async function detailPage(id) {
   rememberItem(id);
   const version = ++routeVersion;
   content.append(link("← All items", "#/items", "breadcrumbs"));
-  content.append(element("h1", "", item[0]), element("p", "muted", `${japaneseItems[id][0]} · Item ${id}`));
+  const title = element("h1", "item-title", item[0]);
+  title.prepend(sectionIcon("036"));
+  content.append(title, element("p", "muted", `${japaneseItems[id][0]} · Item ${id}`));
   const panel = element("section", "panel");
   panel.append(element("h2", "", "Item details"), element("p", "", item[6] || "No description available."));
   const facts = element("dl", "facts");
