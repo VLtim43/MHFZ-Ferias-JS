@@ -7,12 +7,12 @@ const weaponTypes = {
   "8": "Hunting Horn", "9": "Gunlance", A: "Bow", B: "Tonfa",
   C: "Switch Axe", D: "Magnet Spike"
 };
-// Ferias mhficons: the first eleven follow the weapon type IDs; later types
-// were added at separate positions in the original icon sheet.
+// Ferias mhficons: the first eleven follow the weapon type IDs; the later
+// types use their own icons (Switch Axe F: 111, Magnet Spike: 115).
 const weaponTypeIcons = {
   "0": "063", "1": "064", "2": "065", "3": "066", "4": "067",
   "5": "068", "6": "069", "7": "070", "8": "071", "9": "072",
-  A: "073", B: "074", C: "080", D: "111"
+  A: "073", B: "074", C: "111", D: "115"
 };
 const weaponTags = { g: "G Rank", sp: "SP", neko: "RNG Cat", sinca: "Evolution" };
 let questCatalogPromise;
