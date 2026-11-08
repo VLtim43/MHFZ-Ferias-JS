@@ -14,7 +14,7 @@ for (const filename of ["item.js", "mos_sozai.js", "que_sozai.js", "sai_sozai.js
 }
 
 function write(name, value) {
-  fs.mkdirSync(destination, { recursive: true });
+  fs.mkdirSync(path.dirname(path.join(destination, name)), { recursive: true });
   fs.writeFileSync(path.join(destination, name), JSON.stringify(value) + "\n");
   console.log(`Wrote data/${name}`);
 }
@@ -42,7 +42,7 @@ for (const [id, item] of Object.entries(oldItems)) {
 }
 write("items.json", items);
 
-const monsters = { names: { ...oldMonsters.Name }, pages: {}, images: {}, slugs: {} };
+const monsters = { names: { ...oldMonsters.Name }, pages: {}, images: {}, slugs: {}, dropRanks: {}, statLabels: {}, redirects: {} };
 const monsterImageFiles = Object.fromEntries(["monsicons", "monszones"].map(folder => [folder,
   new Map(fs.readdirSync(path.join(root, "archive/ferias/img", folder)).map(filename => [filename.toLowerCase(), filename]))
 ]));
@@ -51,8 +51,37 @@ for (const file of fs.readdirSync(path.join(root, "archive/ferias/mons"))) {
   if (!match || ["mons", "monsF"].includes(match[1])) continue;
   const [ , basename, kind ] = match;
   const id = basename.toLowerCase();
-  (monsters.pages[id] ||= {})[kind] = file;
   const html = fs.readFileSync(path.join(root, "archive/ferias/mons", file), "utf8");
+  if (kind !== "h" && /<meta\b[^>]*http-equiv=["']?refresh\b/i.test(html)) {
+    (monsters.redirects[id] ||= {})[kind] = file;
+    continue;
+  }
+  if (kind !== "h" && !/<table\b[^>]*id=["']?(?:izyo|niku)\b/i.test(html)) {
+    (monsters.redirects[id] ||= {})[kind] = file; // Blank placeholder, not an available stat variant.
+    continue;
+  }
+  (monsters.pages[id] ||= {})[kind] = file;
+  if (kind !== "h") {
+    const title = /<title\b[^>]*>([^<]+)<\/title>/i.exec(html)?.[1] || "";
+    const sourceVariant = [...title.matchAll(/\[([^\]]+)\]/g)].at(-1)?.[1];
+    const prefixedVariant = title.endsWith(monsters.names[id]) ? title.slice(0, -monsters.names[id].length).trim() : "";
+    (monsters.statLabels[id] ||= {})[kind] = sourceVariant || prefixedVariant || "Normal";
+  }
+  if (kind === "h") {
+    // The first table's second row contains the actual carve/drop column names.
+    // These are not the same classification as the n/nh/ng/ni/nt stat files.
+    const table = /<table\b[^>]*>([\s\S]*?)<\/table>/i.exec(html)?.[1];
+    const rows = table && [...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
+    const header = rows?.[1]?.[1] || rows?.[0]?.[1];
+    if (!header) throw new Error(`Missing monster drop header: ${file}`);
+    const ranks = [...header.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)]
+      .map(([, text]) => text.replace(/<[^>]*>/g, "").trim());
+    if (!ranks[0]) ranks.shift(); // The blank source-label column is sometimes malformed or omitted.
+    if (!ranks.length || ranks.some(rank => !rank || ranks.indexOf(rank) !== ranks.lastIndexOf(rank))) {
+      throw new Error(`Invalid monster drop ranks: ${file}`);
+    }
+    monsters.dropRanks[id] = ranks;
+  }
   if (kind !== "h") {
     for (const [, imageKind, imagePath] of html.matchAll(/<img\b[^>]*\bid=["']?(icon|hitzones)["']?\s+src=["']?\.\.\/img\/(mons(?:icons|zones)\/[\w.-]+\.(?:png|webp|gif))/gi)) {
       const [folder, filename] = imagePath.split("/");
@@ -83,14 +112,17 @@ for (const [id, value] of Object.entries(oldQuests.Name)) {
 // The item reward index names only quests that participate in item lookups. Many
 // event/special quests exist only in the HTML tables; index those too.
 const questDirectory = path.join(root, "archive/ferias/quest");
+const questDetailsByFile = new Map();
 const plain = html => html.replace(/<i\b[^>]*>[\s\S]*?<\/i>/gi, "")
   .replace(/<[^>]*>/g, "").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&")
   .replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").trim();
 for (const file of fs.readdirSync(questDirectory).filter(name => name.endsWith(".htm"))) {
   const html = fs.readFileSync(path.join(questDirectory, file), "utf8");
+  const detailIds = new Set();
   for (const [table] of html.matchAll(/<table\s+class=["']mei["'][\s\S]*?<\/table>/gi)) {
     const id = /<th\b[^>]*\bid=["']?l([0-9a-f]{4})["']?/i.exec(table)?.[1].toUpperCase();
     if (!id) continue;
+    detailIds.add(id);
     const row = /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi;
     row.exec(table); // header
     const values = [...(row.exec(table)?.[1] || "").matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map(match => match[1]);
@@ -103,6 +135,11 @@ for (const file of fs.readdirSync(questDirectory).filter(name => name.endsWith("
       quests.names[id].file = file.slice(0, -4);
     }
   }
+  questDetailsByFile.set(file.slice(0, -4), detailIds);
+}
+for (const [id, quest] of Object.entries(quests.names)) {
+  quest.sourceAvailable = questDetailsByFile.has(quest.file);
+  quest.detailAvailable = questDetailsByFile.get(quest.file)?.has(id) || false;
 }
 write("quests.json", quests);
 
@@ -181,3 +218,61 @@ write("weapon-pages.json", weaponPages);
 write("item-extras.json", {
   shopByItem: oldOther.Shop, combinationsByItem: oldOther.Cyougo, otherUsesByItem: oldOther.Riyou
 });
+
+// Item-facing equipment uses. Keep the original signed/encoded quantity as text:
+// some cuff and special-upgrade records are not ordinary positive item counts.
+// Partition by the first three item-ID digits so pages fetch only the needed shard.
+// One unusually dense prefix (330) is split into individual item files.
+const itemUses = {};
+const decorationTypes = new Set(["d", "n", "c", "p", "s", "t", "f", "k", "z"]);
+for (const [kind, materialIndex, names] of [
+  ["weapons", oldWeapons.Sozai, oldWeapons.Name],
+  ["equipment", oldArmor.Sozai, oldArmor.Name]
+]) {
+  for (const [itemId, encoded] of Object.entries(materialIndex)) {
+    const uses = (itemUses[itemId] ||= { weapons: [], armor: [], decorations: [] });
+    for (const entry of encoded.split(",")) {
+      const id = entry.slice(0, 5);
+      const name = names[id];
+      if (!/^[0-9a-fA-F]{4}$/.test(itemId) || !/^(?:[0-9a-fA-F]{4}|xxxx)$/.test(id.slice(1)) || !/^[0-9-]$/.test(entry[5]) || !entry.slice(6)) {
+        throw new Error(`Invalid ${kind} use ${itemId}: ${entry}`);
+      }
+      const category = kind === "weapons" ? "weapons" : decorationTypes.has(id[0]) ? "decorations" : "armor";
+      if (category !== "decorations" && entry[5] === "-") throw new Error(`Unknown equipment level: ${entry}`);
+      const record = { id, name: name || id, quantity: entry.slice(6) };
+      if (!name) record.nameMissing = true;
+      if (category === "weapons") {
+        record.craft = ["Craft", "Upgrade", "G Craft", "G Upgrade", "G Level"][Number(entry[5])];
+        if (!record.craft) throw new Error(`Unknown weapon craft type: ${entry}`);
+        if (entry[5] === "4") {
+          record.level = entry.slice(6, 8);
+          record.quantity = entry.slice(8);
+        }
+      } else if (category === "armor") {
+        record.level = entry[5] === "0" ? "Base" : entry[5];
+      }
+      uses[category].push(record);
+    }
+  }
+}
+const usesByPrefix = {};
+for (const [id, uses] of Object.entries(itemUses)) {
+  const prefix = id.startsWith("330") ? id : id.slice(0, 3);
+  (usesByPrefix[prefix] ||= {})[id] = uses;
+}
+write("item-uses/index.json", Object.keys(usesByPrefix).sort());
+for (const [prefix, uses] of Object.entries(usesByPrefix)) write(`item-uses/${prefix}.json`, uses);
+
+// Shops are part of item acquisition, but the other compact extras contain
+// unrelated retired Ferias systems; preserve those in item-extras.json for now.
+const shopNames = ["General (basic)", "General (books)", "General (ammo)", "General (tools)", "General (dojo)", "General (special)", "General (GCP exchange)", "Grocery Store", "Combiner", "Shot", "Guild Shop", "MyTore General Store", "NetCafe Shop", "Hunter Festival", "On Balloon", "Special Item Shop", "Guild Reception", "On Ravi Balloon", "Sky Corridor", "Diva (exchange)", "Diva (limited)", "General (lottery)", "Hunting Season", "Road (exchange)", "Harisen Cat", "Guild Interception", "MezFes"];
+const shops = {};
+for (const [itemId, text] of Object.entries(oldOther.Shop)) {
+  shops[itemId] = text.split(",").map(entry => {
+    const code = Number(entry.slice(0, 2));
+    if (!shopNames[code]) throw new Error(`Unknown shop code for ${itemId}: ${entry}`);
+    return { shop: shopNames[code], detail: entry.slice(2) };
+  });
+}
+write("item-shops.json", shops);
+require("./build-weapons");

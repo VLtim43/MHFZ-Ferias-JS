@@ -1,6 +1,6 @@
 "use strict";
 
-const monsterVariants = { n: "Normal", nh: "Henshu", ng: "GR", ni: "Zenith", nt: "Corridor & Road" };
+const monsterVariantOrder = ["n", "nh", "ng", "ni", "nt"];
 let monstersPromise;
 
 function monsterData() {
@@ -42,7 +42,7 @@ function monsterList(current, data) {
       const icon = monsterIcon(name);
       if (icon) card.append(icon);
       const text = element("span", "", name);
-      text.append(element("small", "", Object.keys(data.pages[id]).filter(key => key !== "h").map(key => monsterVariants[key]).filter(Boolean).join(" · ") || "Carves"));
+      text.append(element("small", "", monsterVariantOrder.filter(key => data.pages[id][key]).map(key => data.statLabels?.[id]?.[key] || key).join(" · ") || "Carves"));
       card.append(text);
       results.append(card);
     }
@@ -118,7 +118,7 @@ function monsterImagePath(path, description) {
   return image;
 }
 
-function showMonsterStats(doc, target, heading, images, fallback) {
+function showMonsterStats(doc, target, heading, images, fallback, variantLabel) {
   target.replaceChildren();
   heading.querySelector(".monster-art")?.remove();
   const artwork = (images?.icon || fallback) && monsterImagePath(images?.icon || fallback, `${heading.querySelector("h1").textContent} illustration`);
@@ -127,15 +127,27 @@ function showMonsterStats(doc, target, heading, images, fallback) {
     heading.prepend(artwork);
   }
   const status = doc.querySelector("table#izyo");
-  if (status) target.append(monsterSection("Status resistance & enrage", monsterTable(status)));
+  const diagram = images?.hitzones && monsterImagePath(images.hitzones, `${variantLabel} monster part-zone diagram`);
+  if (status && diagram) {
+    const layout = element("div", "monster-stats-layout");
+    const statusPanel = monsterSection("Status resistance & enrage", monsterTable(status));
+    statusPanel.classList.add("monster-status-panel");
+    const figure = element("figure", "monster-diagram");
+    figure.append(diagram, element("figcaption", "hint", `${variantLabel} part zones`));
+    layout.append(statusPanel, figure);
+    target.append(layout);
+  } else {
+    if (status) target.append(monsterSection("Status resistance & enrage", monsterTable(status)));
+    if (diagram) target.append(diagram);
+  }
   const hitzones = doc.querySelector("table#niku");
   if (hitzones) target.append(monsterSection("Hitzones", monsterTable(hitzones)));
-  const diagram = images?.hitzones && monsterImagePath(images.hitzones, "Monster hitzone diagram");
-  if (diagram) target.append(diagram);
-  if (!target.children.length) target.append(element("p", "empty", "No status or hitzone data is recorded for this variant."));
+  const breaks = doc.querySelector("table#down");
+  if (breaks) target.append(monsterSection("Stagger resistance & part breaks", monsterTable(breaks)));
+  if (!target.children.length) target.append(element("p", "empty", "No stat tables are recorded for this variant."));
 }
 
-function showMonsterDrops(doc, target, selected, onRank) {
+function showMonsterDrops(doc, target, selected, onRank, expectedRanks) {
   target.replaceChildren();
   const original = doc.querySelector("table");
   const header = original?.rows[1];
@@ -144,6 +156,10 @@ function showMonsterDrops(doc, target, selected, onRank) {
     return;
   }
   const ranks = [...header.cells].slice(1).map(cell => cell.textContent.trim());
+  if (expectedRanks && ranks.join("\u0000") !== expectedRanks.join("\u0000")) {
+    target.append(element("p", "empty", "The archived drop ranks do not match the generated index. Regenerate the wiki data before using this table."));
+    return;
+  }
   const rank = ranks.includes(selected) ? selected : ranks[0];
   const tabs = element("div", "rank-tabs monster-ranks");
   for (const name of ranks) {
@@ -184,20 +200,24 @@ async function monsterDetail(current, data, version) {
   content.replaceChildren(link("← Monsters", "#/monsters", "breadcrumbs"));
   if (!name || !pages) { content.append(element("h1", "", "Monster not found")); return; }
   const slug = data.slugs?.[id] || id;
-  if (current.id !== slug) history.replaceState(null, "", monsterUrl(slug, current.variant, current.rank));
   document.title = `${name} · Frontier Wiki`;
-  const variants = Object.keys(monsterVariants).filter(key => pages[key]);
+  const variants = monsterVariantOrder.filter(key => pages[key]);
   const variant = variants.includes(current.variant) ? current.variant : variants[0];
+  const rank = data.dropRanks?.[id]?.includes(current.rank) ? current.rank : "";
+  if (current.id !== slug || current.variant && current.variant !== variant || current.rank && !rank) {
+    history.replaceState(null, "", monsterUrl(slug, variant, rank));
+  }
   const heading = element("div", "monster-heading");
   const icon = monsterIcon(name);
   if (icon) heading.append(icon);
   heading.append(element("h1", "", name));
   content.append(heading, element("p", "muted", `Ferias monster · ${id}`));
   if (variants.length) {
+    content.append(element("p", "hint", "Stats & hitzones — these variants are separate from the carve/drop ranks below."));
     const tabs = element("nav", "rank-tabs monster-variants");
     tabs.setAttribute("aria-label", "Monster stat variant");
     for (const key of variants) {
-      const tab = link(monsterVariants[key], monsterUrl(slug, key, current.rank), "monster-rank-tab");
+      const tab = link(data.statLabels?.[id]?.[key] || key, monsterUrl(slug, key, rank), "monster-rank-tab");
       if (key === variant) { tab.classList.add("selected"); tab.setAttribute("aria-current", "page"); }
       tabs.append(tab);
     }
@@ -211,10 +231,10 @@ async function monsterDetail(current, data, version) {
   if (variant) content.append(stats);
   if (pages.h) {
     const drops = element("div", "", "Loading carves and drops…");
-    content.append(element("h2", "section-head", "Carves & drops"), drops);
+    content.append(element("h2", "section-head", "Carves & drops"),
+      element("p", "hint", "These are reward-table ranks from Ferias, not stat variants. For example, Henshu stats and Elite drops are different categories."), drops);
     oldPage("mons", pages.h).then(doc => {
-      const preferred = variant === "ni" ? "Zenith★1" : variant === "ng" ? "GR" : "";
-      if (version === routeVersion) showMonsterDrops(doc, drops, current.rank || preferred, rank => monsterUrl(slug, variant, rank));
+      if (version === routeVersion) showMonsterDrops(doc, drops, rank, selectedRank => monsterUrl(slug, variant, selectedRank), data.dropRanks?.[id]);
     }).catch(error => {
       if (version === routeVersion) drops.textContent = "Carve data could not be loaded; see the original page above.";
       console.error(error);
@@ -223,7 +243,7 @@ async function monsterDetail(current, data, version) {
   if (variant) oldPage("mons", pages[variant]).then(doc => {
     const images = data.images?.[id];
     const fallback = Object.values(images || {}).find(entry => entry.icon)?.icon;
-    if (version === routeVersion) showMonsterStats(doc, stats, heading, images?.[variant], fallback);
+    if (version === routeVersion) showMonsterStats(doc, stats, heading, images?.[variant], fallback, data.statLabels?.[id]?.[variant] || "Selected");
   }).catch(error => {
     if (version === routeVersion) stats.textContent = "Stats could not be loaded; see the original page above.";
     console.error(error);

@@ -1,20 +1,28 @@
 "use strict";
 
-// Search indexes are generated from Ferias; full records are read from its original
-// HTML tables on demand until weapon/quest extraction is complete.
+// Search indexes are generated from Ferias; quest details still use the original HTML.
 const weaponTypes = {
   "0": "Great Sword", "1": "Heavy Bowgun", "2": "Hammer", "3": "Lance",
   "4": "Sword & Shield", "5": "Light Bowgun", "6": "Dual Swords", "7": "Long Sword",
   "8": "Hunting Horn", "9": "Gunlance", A: "Bow", B: "Tonfa",
   C: "Switch Axe", D: "Magnet Spike"
 };
+// Ferias mhficons: the first eleven follow the weapon type IDs; later types
+// were added at separate positions in the original icon sheet.
+const weaponTypeIcons = {
+  "0": "063", "1": "064", "2": "065", "3": "066", "4": "067",
+  "5": "068", "6": "069", "7": "070", "8": "071", "9": "072",
+  A: "073", B: "074", C: "080", D: "111"
+};
+const weaponTags = { g: "G Rank", sp: "SP", neko: "RNG Cat", sinca: "Evolution" };
 let questCatalogPromise;
 let weaponCatalogPromise;
+const weaponDetailPromises = new Map();
 const originalPages = new Map();
 
 function catalogData(section) {
   if (section === "quests") return questCatalogPromise ||= loadData("quests");
-  return weaponCatalogPromise ||= Promise.all([loadData("equipment"), loadData("weapon-pages")]).then(([equipment, pages]) => ({ equipment, pages }));
+  return weaponCatalogPromise ||= loadData("weapons-index");
 }
 
 function oldPage(folder, file) {
@@ -37,18 +45,34 @@ function catalogPage(current) {
     if (current.id) {
       if (current.section === "quests") questPage(current.id, data, version);
       else weaponPage(current.id, data, version);
-    } else catalogList(current, data);
+    } else if (current.section === "weapons" && !current.type && !current.query && !current.category) weaponTypesPage(data);
+    else catalogList(current, data);
   }).catch(error => {
     if (version === routeVersion) content.replaceChildren(element("p", "empty", `Could not load ${title.toLowerCase()}. Please try again.`));
     console.error(error);
   });
 }
 
+function weaponTypesPage(index) {
+  content.replaceChildren(element("h1", "", "Weapons"), element("p", "muted", "Choose a weapon type to browse its weapons."));
+  const counts = {};
+  for (const entry of Object.values(index)) counts[entry.type] = (counts[entry.type] || 0) + 1;
+  const grid = element("div", "weapon-types");
+  for (const [type, name] of Object.entries(weaponTypes)) {
+    const card = link("", `#/weapons?type=${type}`, "weapon-type-card");
+    card.append(sectionIcon(weaponTypeIcons[type]), element("span", "weapon-type-name", name), element("small", "", `${(counts[type] || 0).toLocaleString()} weapons`));
+    grid.append(card);
+  }
+  content.append(grid);
+}
+
 function catalogList(current, data) {
   const quests = current.section === "quests";
-  const index = quests ? data.names : data.equipment.weaponNames;
-  const heading = quests ? "Quests" : "Weapons";
-  content.replaceChildren(element("h1", "", heading), element("p", "muted", quests
+  const index = quests ? data.names : data;
+  const heading = quests ? "Quests" : current.type && weaponTypes[current.type] ? `${weaponTypes[current.type]} Weapons` : "Weapons";
+  if (!quests) content.replaceChildren(link("← Weapon types", "#/weapons", "breadcrumbs"));
+  else content.replaceChildren();
+  content.append(element("h1", "", heading), element("p", "muted", quests
     ? "Search quests by title or ID. Quest details and rewards come from the original Ferias tables."
     : "Search weapons by name or ID. Select a weapon type to browse it."));
   const controls = element("div", "catalog-controls");
@@ -67,43 +91,69 @@ function catalogList(current, data) {
   }
   select.value = quests ? current.rank : current.type;
   controls.append(input, select);
+  const category = quests ? null : element("select", "filter-select");
+  if (category) {
+    category.setAttribute("aria-label", "Filter by weapon category");
+    const names = [...new Set(Object.values(index).flatMap(row => row.categories))].sort((a, b) => a.localeCompare(b));
+    for (const [value, name] of [["", "All categories"], ...names.map(name => [name, name])]) {
+      const option = element("option", "", name);
+      option.value = value;
+      category.append(option);
+    }
+    category.value = current.category;
+    controls.append(category);
+  }
   const count = element("p", "hint");
   const results = element("div", "results");
-  content.append(controls, count, results);
+  const more = element("button", "load-more", "Show 100 more");
+  more.type = "button";
+  content.append(controls, count, results, more);
+  let candidates = [];
+  let visible = 100;
+
+  function showResults() {
+    results.replaceChildren();
+    if (!candidates.length) results.append(element("p", "empty", "No matching records."));
+    for (const [id, row] of candidates.slice(0, visible)) {
+      const card = link("", `#/${current.section}/${id}`, "result");
+      card.append(sectionIcon(quests ? "038" : weaponTypeIcons[id[0]]));
+      const text = element("span", "", quests ? row.title : row.name);
+      text.append(element("small", "", quests ? row.level : `${weaponTypes[id[0]]}${row.tags.length ? ` · ${row.tags.map(tag => weaponTags[tag] || tag).join(" · ")}` : ""}`));
+      card.append(text, element("span", "result-code", id));
+      results.append(card);
+    }
+    more.hidden = visible >= candidates.length;
+    count.textContent = `${candidates.length.toLocaleString()} results${candidates.length > visible ? ` · showing ${visible.toLocaleString()}` : ""}`;
+  }
 
   function update() {
     const query = input.value.trim().toLocaleLowerCase();
     const filter = select.value;
-    const candidates = query || filter ? Object.entries(index).filter(([id, row]) => {
+    if (!quests && !query && !filter && !category.value) { weaponTypesPage(index); history.replaceState(null, "", "#/weapons"); return; }
+    candidates = query || filter || category?.value ? Object.entries(index).filter(([id, row]) => {
       if (quests) {
         if (filter && !row.level.toUpperCase().startsWith(filter)) return false;
         return !query || id.toLowerCase().includes(query) || row.title.toLocaleLowerCase().includes(query) || row.level.toLocaleLowerCase().includes(query);
       }
-      if (!weaponTypes[id[0]] || filter && id[0] !== filter) return false;
-      return !query || id.toLowerCase().includes(query) || row.toLocaleLowerCase().includes(query);
+      if (!weaponTypes[id[0]] || filter && id[0] !== filter || category.value && !row.categories.includes(category.value)) return false;
+      return !query || id.toLowerCase().includes(query) || row.name.toLocaleLowerCase().includes(query);
     }) : [];
-    candidates.sort((a, b) => (quests ? a[1].title : a[1]).localeCompare(quests ? b[1].title : b[1]) || a[0].localeCompare(b[0]));
-    count.textContent = query || filter ? `${candidates.length.toLocaleString()} results${candidates.length > 100 ? " · showing first 100, refine your search" : ""}` : "Search by name or ID, or choose a filter to browse.";
-    results.replaceChildren();
-    if (query || filter) {
-      if (!candidates.length) results.append(element("p", "empty", "No matching records."));
-      for (const [id, row] of candidates.slice(0, 100)) {
-        const card = link("", `#/${current.section}/${id}`, "result");
-        card.append(sectionIcon(quests ? "038" : "063"));
-        const text = element("span", "", quests ? row.title : row);
-        text.append(element("small", "", quests ? row.level : weaponTypes[id[0]]));
-        card.append(text, element("span", "result-code", id));
-        results.append(card);
-      }
-    }
+    candidates.sort((a, b) => (quests ? a[1].title : a[1].name).localeCompare(quests ? b[1].title : b[1].name) || a[0].localeCompare(b[0]));
+    visible = 100;
+    if (query || filter || category?.value) {
+      showResults();
+    } else { results.replaceChildren(); more.hidden = true; count.textContent = "Search by name or ID, or choose a filter to browse."; }
     const search = new URLSearchParams();
     if (input.value.trim()) search.set("q", input.value.trim());
     if (filter) search.set(quests ? "rank" : "type", filter);
+    if (category?.value) search.set("category", category.value);
     const hash = `#/${current.section}${search.size ? `?${search}` : ""}`;
     if (location.hash !== hash) history.replaceState(null, "", hash);
   }
   input.addEventListener("input", update);
   select.addEventListener("change", update);
+  category?.addEventListener("change", update);
+  more.addEventListener("click", () => { visible += 100; showResults(); });
   update();
 }
 
@@ -161,6 +211,13 @@ async function questPage(id, data, version) {
   content.replaceChildren(link("← Quests", "#/quests", "breadcrumbs"));
   if (!quest) { content.append(element("h1", "", "Quest not found")); return; }
   content.append(element("h1", "", quest.title), element("p", "muted", `${quest.level} · Quest ${id}`));
+  if (quest.detailAvailable === false) {
+    if (quest.sourceAvailable) addLegacyLink(content, "Original quest listing ↗", "quest", `${quest.file}.htm`, id);
+    content.append(element("p", "empty", quest.sourceAvailable
+      ? "This quest has no detail table in the archive. Its original listing may contain additional information."
+      : "This quest is indexed, but its original file is missing from the archive."));
+    return;
+  }
   addLegacyLink(content, "Original quest entry ↗", "quest", `${quest.file}.htm`, id);
   const details = element("div", "", "Loading the original quest table…");
   content.append(details);
@@ -204,87 +261,132 @@ async function questPage(id, data, version) {
   }
 }
 
-function sharpness(cell) {
-  const bars = cell.querySelectorAll("ul");
-  if (!bars.length) return null;
+function weaponSharpness(bars) {
   const wrapper = element("div", "sharpness-bars");
   for (const bar of bars) {
     const line = element("div", "sharpness-bar");
-    for (const segment of bar.querySelectorAll("li")) {
-      const size = /\bs(\d+)\b/.exec(segment.className);
-      const color = /\b[roygbwps]\b/.exec(segment.className);
-      if (size && color) {
-        const span = element("span", `sharpness-${color[0]}`);
-        span.style.width = `${size[1]}px`;
-        line.append(span);
-      }
+    for (const { color, length } of bar) {
+      const span = element("span", `sharpness-${color}`);
+      span.style.width = `${length}px`;
+      line.append(span);
     }
     wrapper.append(line);
   }
   return wrapper;
 }
 
-async function weaponPage(id, data, version) {
-  const name = data.equipment.weaponNames[id];
-  content.replaceChildren(link("← Weapons", "#/weapons", "breadcrumbs"));
-  if (!name || !weaponTypes[id[0]]) { content.append(element("h1", "", "Weapon not found")); return; }
-  const files = data.pages[id] || [];
-  content.append(element("h1", "", name), element("p", "muted", `${weaponTypes[id[0]]} · Weapon ${id}`));
-  if (!files.length) {
+function weaponCell(value, type, index) {
+  const target = document.createDocumentFragment();
+  if (value.parts) {
+    let previousQuantity = null;
+    for (const part of value.parts) {
+      let text = part.text;
+      if (previousQuantity !== null && !part.itemId && !part.weaponId) text = text.replace(new RegExp(`^\\s*x${previousQuantity}(?=\\D|$)`, "i"), "");
+      previousQuantity = null;
+      if (part.itemId && items[part.itemId]) {
+        target.append(link(text, `#/items/${part.itemId}`));
+        if (part.quantity) { target.append(document.createTextNode(` ×${part.quantity}`)); previousQuantity = part.quantity; }
+      }
+      else if (part.weaponId) {
+        const basename = /^([a-z_]+)\.htm#l/i.exec(part.href || "")?.[1];
+        const destination = basename ? Object.entries(weaponFileBases).find(([, base]) => basename === base || basename.startsWith(`${base}_`))?.[0] : type;
+        const id = destination && destination + part.weaponId;
+        target.append(id && index[id] ? link(text, `#/weapons/${id}`) : document.createTextNode(text));
+      } else target.append(document.createTextNode(text));
+    }
+  } else if (value.text) target.append(document.createTextNode(value.text));
+  if (value.sharpness) target.append(weaponSharpness(value.sharpness));
+  return target;
+}
+
+function weaponField(parent, label, value, type, index) {
+  if (!value || !value.text && !value.parts && !value.sharpness) return;
+  const row = element("div", "detail-field");
+  const description = element("dd");
+  description.append(weaponCell(value, type, index));
+  row.append(element("dt", "", label), description);
+  parent.append(row);
+}
+
+function weaponRowPanel(parent, table, row, index, type, label) {
+  const panel = element("section", "panel");
+  panel.append(element("h2", "", label));
+  const facts = element("dl", "detail-fields");
+  const materials = element("dl", "detail-fields");
+  const materialsLabel = /(?:Mats|Materials|素材)/i;
+  let column = 0;
+  row.cells.forEach((cell, number) => {
+    const title = table.columns[column] || `Field ${column + 1}`;
+    if (number) weaponField(materialsLabel.test(title) ? materials : facts, title, cell, type, index);
+    column += cell.colSpan || 1;
+  });
+  if (table.kind !== "tower") {
+    const upgrades = row.cells[0].parts?.filter(part => part.weaponId);
+    if (upgrades?.length) weaponField(facts, "Upgrades", { parts: upgrades.flatMap((part, position) => position ? [{ text: " " }, part] : [part]) }, type, index);
+  }
+  panel.append(facts);
+  if (materials.children.length) {
+    panel.append(element("h3", "", table.kind === "tower" ? "Enhancement costs" : "Crafting materials"), materials);
+  }
+  parent.replaceChildren(panel);
+}
+
+function weaponTable(parent, table, id, index) {
+  const section = element("section", "weapon-source");
+  const tower = table.kind === "tower";
+  section.append(element("h2", "section-head", tower ? "Tower enhancements" : "Weapon stats & crafting"));
+  if (tower) section.append(element("p", "hint", "Tower upgrades use a separate original table. Fields retain its original labels."));
+  const select = element("select", "filter-select");
+  select.setAttribute("aria-label", tower ? "Tower enhancement step" : "Weapon level or variant");
+  if (table.rows.length > 1) {
+    table.rows.forEach((row, position) => {
+      const label = tower ? `Step ${position + 1}` : row.variant ? `Variant ${row.variant}` : row.level ? `Lv${row.level}` : "Base";
+      const option = element("option", "", label);
+      option.value = String(position);
+      select.append(option);
+    });
+    section.append(select);
+  }
+  const display = element("div");
+  function show() {
+    const row = table.rows[Number(select.value) || 0];
+    const label = tower ? `${index[id].name} · Step ${Number(select.value) + 1 || 1}` : row.variant ? `${index[id].name} · Variant ${row.variant}` : row.level ? `${index[id].name} · Lv${row.level}` : index[id].name;
+    weaponRowPanel(display, table, row, index, id[0], tower ? `Tower: ${label}` : label);
+    section.querySelector(".actions a").href = `../archive/ferias/buki/${table.file}#${row.anchor}`;
+  }
+  const actions = element("p", "actions");
+  actions.append(link("Original table entry ↗", "#"));
+  section.append(display, actions);
+  select.addEventListener("change", show);
+  show();
+  parent.append(section);
+}
+
+async function weaponPage(id, index, version) {
+  const entry = index[id];
+  content.replaceChildren(link(`← ${weaponTypes[id[0]] || "Weapons"} weapons`, weaponTypes[id[0]] ? `#/weapons?type=${id[0]}` : "#/weapons", "breadcrumbs"));
+  if (!entry || !weaponTypes[id[0]]) { content.append(element("h1", "", "Weapon not found")); return; }
+  document.title = `${entry.name} · Frontier Wiki`;
+  content.append(element("h1", "", entry.name), element("p", "muted", `${weaponTypes[id[0]]} · Weapon ${id}${entry.tags.length ? ` · ${entry.tags.map(tag => weaponTags[tag] || tag).join(" · ")}` : ""}`));
+  if (!entry.hasDetail) {
     content.append(element("p", "empty", "This weapon is indexed by name, but its original detail row has not been located."));
     return;
   }
-  addLegacyLink(content, "Original weapon entry ↗", "buki", files[0], id.slice(1));
-  const details = element("div", "", "Loading the original weapon table…");
+  const details = element("div", "", "Loading weapon data…");
   content.append(details);
   try {
-    const doc = await oldPage("buki", files[0]);
+    const shard = id.slice(0, 3);
+    if (!weaponDetailPromises.has(shard)) weaponDetailPromises.set(shard, loadData(`weapon-details/${shard}`).catch(error => {
+      weaponDetailPromises.delete(shard);
+      throw error;
+    }));
+    const data = await weaponDetailPromises.get(shard);
     if (version !== routeVersion) return;
-    const baseId = id.slice(1);
-    const rows = [...doc.querySelectorAll(`td[id^="l${baseId}"]`)]
-      .filter(node => node.id === `l${baseId}` || /^\d{1,2}$/.test(node.id.slice(5)) && node.querySelector("b")?.textContent.trim() === `Lv${Number(node.id.slice(5))}`)
-      .map(node => node.closest("tr")).filter(Boolean);
-    if (!rows.length) { details.textContent = "Weapon row not found in the original table."; return; }
     details.replaceChildren();
-    const selector = element("select", "filter-select");
-    selector.setAttribute("aria-label", "Weapon level");
-    if (rows.length > 1) {
-      rows.forEach((row, index) => {
-        const label = row.cells[0]?.querySelector("b")?.textContent.trim() || `Entry ${index + 1}`;
-        const option = element("option", "", label);
-        option.value = String(index);
-        selector.append(option);
-      });
-      details.append(element("p", "hint", "Select a level to see its stats and materials."), selector);
-    }
-    const panel = element("section", "panel");
-    details.append(panel);
-    function display(index) {
-      const row = rows[index];
-      panel.replaceChildren(element("h2", "", row.cells[0]?.querySelector("b")?.textContent.trim() || "Weapon details"));
-      const fields = element("dl", "detail-fields");
-      const header = row.closest("table")?.querySelector("thead tr");
-      [...row.cells].forEach((cell, cellIndex) => {
-        const label = header?.cells[cellIndex]?.textContent.trim() || `Field ${cellIndex + 1}`;
-        if (cellIndex === 0) {
-          const upgrades = cell.querySelector("div");
-          if (upgrades) field(fields, "Upgrades", upgrades, id[0]);
-        } else if (/sharpness/i.test(label)) {
-          const bar = sharpness(cell);
-          if (bar) {
-            const group = element("div", "detail-field");
-            group.append(element("dt", "", "Sharpness"), element("dd"));
-            group.lastChild.append(bar);
-            fields.append(group);
-          }
-        } else field(fields, label, cell, id[0]);
-      });
-      panel.append(fields);
-    }
-    selector.addEventListener("change", () => display(Number(selector.value)));
-    display(0);
+    if (!data[id]) throw new Error(`Missing weapon detail ${id}`);
+    for (const table of data[id].tables) weaponTable(details, table, id, index);
   } catch (error) {
-    if (version === routeVersion) details.textContent = "Detailed weapon data could not be loaded; see the original entry above.";
+    if (version === routeVersion) details.textContent = "Weapon details could not be loaded. Please try again.";
     console.error(error);
   }
 }

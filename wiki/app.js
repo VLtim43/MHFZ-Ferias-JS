@@ -4,9 +4,11 @@
 let items = {};
 let ids = [];
 const content = document.getElementById("content");
-const rankNames = { Kai: "Low Rank", Zyoui: "High Rank", Sugo: "HR100 / Elite", G: "G Rank" };
+const rankNames = { Kai: "Low Rank", Zyoui: "High Rank", Sugo: "Elite / HR5", G: "G Rank" };
 const recentKey = "frontier-wiki-recent-items";
 let sourceDataPromise;
+const itemUsesPromises = new Map();
+let itemUsesIndexPromise;
 let routeVersion = 0;
 
 function recentItems() {
@@ -76,7 +78,7 @@ function route() {
   const match = /^\/(items|quests|weapons|monsters)(?:\/([a-z0-9-]+))?(?:\?(.*))?\/?$/i.exec(hash);
   if (!match || (match[1] === "items" && match[2] && match[2].length !== 4) || (match[1] === "quests" && match[2] && match[2].length !== 4) || (match[1] === "weapons" && match[2] && match[2].length !== 5)) return { section: "items", query: "" };
   const search = new URLSearchParams(match[3] || "");
-  return { section: match[1].toLowerCase(), id: match[1].toLowerCase() === "monsters" ? match[2]?.toLowerCase() : match[2]?.toUpperCase(), query: search.get("q") || "", type: search.get("type") || "", rank: search.get("rank") || "", variant: search.get("variant") || "" };
+  return { section: match[1].toLowerCase(), id: match[1].toLowerCase() === "monsters" ? match[2]?.toLowerCase() : match[2]?.toUpperCase(), query: search.get("q") || "", type: search.get("type") || "", category: search.get("category") || "", rank: search.get("rank") || "", variant: search.get("variant") || "" };
 }
 
 function listPage(query) {
@@ -139,8 +141,11 @@ function getSources() {
   // Only load the acquisition indexes when an item detail is opened.
   if (!sourceDataPromise) {
     sourceDataPromise = Promise.all([
-      loadData("item-sources"), loadData("monsters"), loadData("quests")
-    ]).then(([byItem, monsters, quests]) => ({ byItem, monsters, quests }));
+      loadData("item-sources"), loadData("monsters"), loadData("quests"), loadData("item-shops")
+    ]).then(([byItem, monsters, quests, shops]) => ({ byItem, monsters, quests, shops })).catch(error => {
+      sourceDataPromise = null;
+      throw error;
+    });
   }
   return sourceDataPromise;
 }
@@ -168,9 +173,8 @@ function sourceGroup(parent, name, entries, icon) {
 }
 
 const seasonNames = ["Warm", "Cold", "Breeding"];
-const rankIds = { Kai: "kai", Zyoui: "zyoui", Sugo: "sugo", G: "g" };
 
-function gatheringTable(parent, data, rank) {
+function gatheringTable(parent, data) {
   if (!data) return;
   const section = element("section", "source-group");
   const heading = element("h3", "", "Gathering");
@@ -183,8 +187,13 @@ function gatheringTable(parent, data, rank) {
   const previewLink = link("", "#", "map-link");
   const image = element("img");
   image.alt = "Gathering area map";
+  const mapStatus = element("p", "hint");
+  image.addEventListener("error", () => {
+    previewLink.style.display = "none";
+    mapStatus.textContent = "No map image is available for this gathering point.";
+  });
   previewLink.append(image);
-  map.append(previewLink);
+  map.append(previewLink, mapStatus);
 
   seasonNames.forEach(season => {
     const tr = element("tr");
@@ -194,19 +203,21 @@ function gatheringTable(parent, data, rank) {
       const locationId = entryData.mapId;
       const entry = element("div", "gather-entry");
       entry.append(document.createTextNode(`${entryData.location} Area: ${entryData.spot} `));
-      function timeLink(text, area, point, percentage) {
+      function timeLink(text, area, percentage) {
         const button = element("button", text === "Day" ? "day-link" : "night-link", text);
         button.type = "button";
         button.addEventListener("click", () => {
           if (!locationId) return;
+          mapStatus.textContent = "";
           image.src = `../assets/saisyu/${locationId}-${area}.png`;
-          previewLink.href = `../archive/ferias/saisyu/${locationId}-${rankIds[rank]}.htm#l${point}`;
+          previewLink.href = image.src;
+          previewLink.setAttribute("aria-label", `Open ${entryData.location} gathering map`);
           previewLink.style.display = "block";
         });
         entry.append(button, document.createTextNode(` ${percentage || "?"}% `));
       }
-      if (entryData.time) timeLink(entryData.time, entryData.area, entryData.point, entryData.chance);
-      if (entryData.night) timeLink("Night", entryData.night.area, entryData.night.point, entryData.night.chance);
+      if (entryData.time) timeLink(entryData.time, entryData.area, entryData.chance);
+      if (entryData.night) timeLink("Night", entryData.night.area, entryData.night.chance);
       cell.append(entry);
     }
     tr.append(cell);
@@ -219,7 +230,8 @@ function gatheringTable(parent, data, rank) {
 
 function showSources(id, sources) {
   sources.replaceChildren();
-  const { monsters, quests, byItem } = sources.data;
+  const { monsters, quests, byItem, shops } = sources.data;
+  sourceGroup(sources, "Shops", (shops[id] || []).map(entry => ({ name: entry.shop, detail: entry.detail })), "036");
   const tabs = element("div", "rank-tabs");
   tabs.setAttribute("role", "tablist");
   tabs.setAttribute("aria-label", "Item source rank");
@@ -228,7 +240,7 @@ function showSources(id, sources) {
   for (const [key, label] of Object.entries(rankNames)) {
     const group = byItem[id]?.[key] || {};
     const monsterEntries = (group.monsters || []).map(({ monsterId, detail }) => {
-      return { name: monsters.names[monsterId] || monsterId, monsterName: monsters.names[monsterId], detail, href: monsters.pages?.[monsterId] ? `#/monsters/${monsters.slugs?.[monsterId] || monsterId}` : `../archive/ferias/mons/${monsterId}_h.htm` };
+      return { name: monsters.names[monsterId] || monsterId, monsterName: monsters.names[monsterId], detail, href: monsters.pages?.[monsterId] ? `#/monsters/${monsters.slugs?.[monsterId] || monsterId}` : null };
     });
     const questEntries = (group.quests || []).map(({ questId, rewardType, quantity, chance }) => {
       const quest = quests.names[questId];
@@ -244,7 +256,7 @@ function showSources(id, sources) {
     const section = element("section", "rank-panel");
     section.id = `rank-${key}`;
     section.setAttribute("role", "tabpanel");
-    gatheringTable(section, gatherData, key);
+    gatheringTable(section, gatherData);
     sourceGroup(section, "Quest rewards", questEntries, "038");
     sourceGroup(section, "Monster drops / carves / capture", monsterEntries, "024");
     if (!gatherData && !questEntries.length && !monsterEntries.length) section.append(element("p", "empty", "No gathering, quest, or monster sources recorded for this rank."));
@@ -274,6 +286,40 @@ function showSources(id, sources) {
   select(Math.max(0, rankPanels.findIndex(entry => entry.hasData)));
 }
 
+function showItemUses(id, target, data) {
+  target.replaceChildren();
+  const groups = [["weapons", "Weapons", "063"], ["armor", "Armor", "077"], ["decorations", "Decorations & cuffs", "077"]];
+  const uses = data[id] || {};
+  for (const [key, heading, icon] of groups) {
+    const entries = uses[key] || [];
+    if (!entries.length) continue;
+    const section = element("section", "source-group");
+    const title = element("h3", "", `${heading} (${entries.length.toLocaleString()})`);
+    title.prepend(sectionIcon(icon));
+    const list = element("ul", "source-list");
+    let shown = 0;
+    const more = element("button", "day-link", "Show more");
+    more.type = "button";
+    function appendBatch() {
+      for (const entry of entries.slice(shown, shown + 100)) {
+        const row = element("li");
+        if (key === "weapons" && !entry.nameMissing && /^[0-9A-D]/.test(entry.id)) row.append(link(entry.name, `#/weapons/${entry.id}`));
+        else row.append(element("span", "", entry.name));
+        const details = [entry.craft, entry.level && (entry.level === "Base" ? "Base" : `Lv ${entry.level}`), `× ${entry.quantity}`, entry.nameMissing && "Name unavailable in source"].filter(Boolean);
+        row.append(element("small", "", ` · ${details.join(" · ")}`));
+        list.append(row);
+      }
+      shown = Math.min(shown + 100, entries.length);
+      more.hidden = shown === entries.length;
+    }
+    more.addEventListener("click", appendBatch);
+    appendBatch();
+    section.append(title, list, more);
+    target.append(section);
+  }
+  if (!target.children.length) target.append(element("p", "empty", "No equipment uses recorded for this item."));
+}
+
 async function detailPage(id) {
   const item = items[id];
   content.replaceChildren();
@@ -296,17 +342,52 @@ async function detailPage(id) {
     facts.append(fact);
   }
   panel.append(facts);
+  panel.append(element("p", "hint", "Combination recipes and other special uses have not yet been migrated."));
   const actions = element("div", "actions");
-  actions.append(link("View original item page ↗", `../archive/ferias/sozai/sozai.htm?${id}`));
+  actions.append(link("View remaining original item details ↗", `../archive/ferias/sozai/sozai.htm?${id}`));
   panel.append(actions);
   content.append(panel, element("h2", "section-head", "Where to find it"));
   const sources = element("div", "", "Loading sources…");
-  content.append(sources);
+  const usesSection = element("section", "panel");
+  usesSection.append(element("h2", "", "Used to make"));
+  const useButton = element("button", "day-link", "Load equipment uses");
+  useButton.type = "button";
+  const usesTarget = element("div");
+  useButton.addEventListener("click", async () => {
+    useButton.disabled = true;
+    usesTarget.textContent = "Loading equipment uses…";
+    try {
+      if (!itemUsesIndexPromise) itemUsesIndexPromise = loadData("item-uses/index").catch(error => {
+        itemUsesIndexPromise = null;
+        throw error;
+      });
+      const available = await itemUsesIndexPromise;
+      const prefix = available.includes(id) ? id : id.slice(0, 3);
+      if (!available.includes(prefix)) {
+        if (version === routeVersion) showItemUses(id, usesTarget, {});
+        return;
+      }
+      if (!itemUsesPromises.has(prefix)) itemUsesPromises.set(prefix, loadData(`item-uses/${prefix}`).catch(error => {
+        itemUsesPromises.delete(prefix);
+        throw error;
+      }));
+      const data = await itemUsesPromises.get(prefix);
+      if (version === routeVersion) showItemUses(id, usesTarget, data);
+    } catch (error) {
+      if (version === routeVersion) {
+        usesTarget.textContent = "Could not load equipment uses. Please try again.";
+        useButton.disabled = false;
+      }
+      console.error(error);
+    }
+  });
+  usesSection.append(useButton, usesTarget);
+  content.append(sources, usesSection);
   try {
     sources.data = await getSources();
     if (version === routeVersion) showSources(id, sources);
   } catch (error) {
-    if (version === routeVersion) sources.textContent = "Could not load item sources. The original item page is still available above.";
+    if (version === routeVersion) sources.textContent = "Could not load item sources. Please reload and try again.";
     console.error(error);
   }
 }
@@ -314,6 +395,7 @@ async function detailPage(id) {
 function render() {
   ++routeVersion;
   const current = route();
+  document.querySelector(".topbar-right").textContent = `${current.section[0].toUpperCase()}${current.section.slice(1)} database`;
   for (const nav of document.querySelectorAll(".nav-item[data-section]")) {
     const active = nav.dataset.section === current.section;
     nav.classList.toggle("active", active);

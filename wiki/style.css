@@ -36,6 +36,14 @@ p { margin: 0 0 12px; }
 .results { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 4px; }
 .recent-heading { grid-column: 1 / -1; margin: 12px 0 2px; }
 .results > .results { grid-column: 1 / -1; }
+.weapon-types { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin: 18px 0; }
+.weapon-type-card { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; padding: 16px 12px; border: 2px ridge #708090; text-decoration: none; background: #303b46; }
+.weapon-type-card:hover, .weapon-type-card:focus-visible { background: #485967; }
+.weapon-type-card .section-icon { width: 30px; height: 30px; }
+.weapon-type-name { font-weight: bold; flex: 1; }
+.weapon-type-card small { color: #bbb; width: 100%; padding-left: 39px; }
+.load-more { display: block; margin: 12px auto; padding: 7px 14px; color: #fff; background: #485967; border: 2px ridge #708090; cursor: pointer; }
+.load-more[hidden] { display: none; }
 .result { display: block; padding: 5px 7px; border: 2px ridge #708090; text-decoration: none; min-width: 0; overflow-wrap: anywhere; }
 .result > .section-icon { float: left; width: 26px; height: 26px; margin: 3px 8px 3px 0; }
 .result:hover { background: #485967; }
@@ -111,6 +119,12 @@ p { margin: 0 0 12px; }
 .monster-table th { width: auto; white-space: nowrap; }
 .monster-table td { min-width: 55px; }
 .monster-art { display: block; width: min(100%, 400px); height: auto; margin: 10px 0; }
+.monster-stats-layout { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+.monster-status-panel { flex: 1 1 500px; min-width: 0; }
+.monster-status-panel td span { margin-inline: .35em; }
+.monster-diagram { flex: 0 1 320px; max-width: 100%; margin: 8px 0 16px; }
+.monster-diagram .monster-art { max-width: 100%; margin: 0; }
+.monster-diagram figcaption { margin-top: 5px; }
 .monster-drop-table th { width: 180px; }
 .monster-drop-table td ul { margin: 0; padding: 0; list-style: none; }
 .monster-drop-table td li { display: inline; }
