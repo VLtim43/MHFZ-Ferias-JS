@@ -54,6 +54,11 @@ p { margin: 0 0 12px; }
 .weapon-tree-list .weapon-tree-list li::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 1px solid #708090; }
 .weapon-tree-list .weapon-tree-list li:last-child::after { bottom: auto; height: 12px; }
 .weapon-tree-current { background: #485967; font-weight: bold; }
+.gear-tree-pieces { display: block; font-size: 12px; }
+.gear-tree-pieces a { margin-right: 7px; }
+.gear-tree-pieces .section-icon { width: 14px; height: 14px; margin-right: 2px; }
+.gear-tree-pieces a[aria-current="page"] { font-weight: bold; color: #fff; }
+.source-list li > .section-icon { float: left; margin: 1px 5px 0 0; }
 .load-more { display: block; margin: 12px auto; padding: 7px 14px; color: #fff; background: #485967; border: 2px ridge #708090; cursor: pointer; }
 .load-more[hidden] { display: none; }
 .result { display: block; padding: 5px 7px; border: 2px ridge #708090; text-decoration: none; min-width: 0; overflow-wrap: anywhere; }
@@ -62,6 +67,9 @@ p { margin: 0 0 12px; }
 .result small { display: block; color: #bbb; }
 .result-code { display: block; font: 11px monospace; color: #aaa; }
 .item-title .section-icon { width: 26px; height: 26px; margin-right: 8px; }
+.item-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 430px); gap: 16px; align-items: start; }
+.item-detail-layout > * { min-width: 0; }
+.item-detail-layout > .panel { margin-top: 8px; }
 .breadcrumbs { display: inline-block; margin-bottom: 10px; }
 .panel { border: 2px ridge #708090; padding: 8px; margin: 8px 0 16px; }
 .panel h2 { background: #708090; padding: 2px 5px; }
@@ -87,6 +95,9 @@ p { margin: 0 0 12px; }
 .quest-rewards .panel { min-width: 0; margin: 8px 0; }
 .quest-rewards .reward-table { table-layout: fixed; overflow-wrap: anywhere; }
 .quest-rewards .reward-table th { width: auto; }
+.quest-supplies summary { cursor: pointer; background: #708090; padding: 2px 5px; }
+.quest-supplies .data-table { margin-top: 8px; }
+.quest-listing-wrap { max-height: 600px; overflow: auto; }
 .facts { display: flex; flex-wrap: wrap; border: 2px ridge #708090; margin: 8px 0; padding: 0; }
 .facts div { display: flex; border-right: 2px ridge #708090; }
 .facts dt, .facts dd { padding: 3px 5px; margin: 0; }
@@ -153,6 +164,7 @@ p { margin: 0 0 12px; }
 @media (max-width: 1200px) {
   .weapon-detail-layout { grid-template-columns: minmax(0, 1fr); }
   .weapon-tree { position: static; }
+  .item-detail-layout { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 1100px) {
   .quest-rewards { grid-template-columns: repeat(2, minmax(0, 1fr)); }

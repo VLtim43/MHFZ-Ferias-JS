@@ -4,9 +4,9 @@ The new wiki lives in `wiki/`. Run `node wiki/dev-server.js` and visit `http://l
 
 | Directory | Purpose |
 | --- | --- |
-| `wiki/` | Current static wiki UI (items, quests, weapons, monsters; other sections planned). |
+| `wiki/` | Static wiki UI for items, quests, weapons, armor, decorations, and monsters. |
 | `data/` | Generated, item-first JSON lookup indexes for the new wiki. |
-| `assets/` | Images used by the new wiki: six UI icons, monster icons, gathering maps. |
+| `assets/` | UI icons, monster images and diagrams, and gathering maps. |
 | `scripts/` | Node-only extractors that rebuild `data/` from the archive. |
 | `archive/ferias/` | Complete original Ferias website, including retired features and the original data. Kept intact as source material and a fallback. |
 

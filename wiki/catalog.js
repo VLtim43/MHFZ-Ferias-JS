@@ -1,6 +1,6 @@
 "use strict";
 
-// Search indexes are generated from Ferias; quest details still use the original HTML.
+// Search indexes and packaged quest details are generated from Ferias.
 const weaponTypes = {
   "0": "Great Sword", "1": "Heavy Bowgun", "2": "Hammer", "3": "Lance",
   "4": "Sword & Shield", "5": "Light Bowgun", "6": "Dual Swords", "7": "Long Sword",
@@ -202,7 +202,7 @@ function field(parent, label, value, weaponType) {
 
 function addLegacyLink(parent, label, folder, file, id) {
   const action = element("p", "actions");
-  action.append(link(label, originalPage(folder, `${file}#l${id}`)));
+  action.append(link(label, originalPage(folder, `${file}${id ? `#l${id}` : ""}`)));
   parent.append(action);
 }
 
@@ -212,10 +212,44 @@ async function questPage(id, data, version) {
   if (!quest) { content.append(element("h1", "", "Quest not found")); return; }
   content.append(element("h1", "", quest.title), element("p", "muted", `${quest.level} · Quest ${id}`));
   if (quest.detailAvailable === false) {
-    if (quest.sourceAvailable) addLegacyLink(content, "Original quest listing ↗", "quest", `${quest.file}.htm`, id);
-    content.append(element("p", "empty", quest.sourceAvailable
-      ? "This quest has no detail table in the archive. Its original listing may contain additional information."
-      : "This quest is indexed, but its original file is missing from the archive."));
+    if (quest.sourceAvailable) addLegacyLink(content, "Original quest listing ↗", "quest", `${quest.file}.htm`, quest.sourceAnchorAvailable ? id : null);
+    if (!quest.sourceAnchorAvailable) {
+      content.append(element("p", "empty", quest.sourceAvailable
+        ? "This quest is indexed, but its entry is missing from the original listing."
+        : "This quest is indexed, but its original file is missing from the archive."));
+      return;
+    }
+    const details = element("div", "", "Loading quest listing…");
+    content.append(details);
+    try {
+      const entries = await questDetails(quest.file);
+      if (version !== routeVersion) return;
+      const doc = new DOMParser().parseFromString(entries[id] || "", "text/html");
+      const source = doc.getElementById(`l${id}`);
+      const listing = source?.nextElementSibling;
+      if (!listing?.matches("table")) { details.textContent = "Quest listing not found in the local data."; return; }
+      const panel = element("section", "panel");
+      panel.append(element("h2", "", source.textContent.trim() || "Quest listing"));
+      const wrapper = element("div", "quest-listing-wrap");
+      const table = element("table", "data-table");
+      for (const row of listing.rows) {
+        const result = element("tr");
+        for (const cell of row.cells) {
+          const target = element(cell.tagName.toLowerCase());
+          target.colSpan = cell.colSpan;
+          target.rowSpan = cell.rowSpan;
+          target.append(oldText(cell));
+          result.append(target);
+        }
+        table.append(result);
+      }
+      wrapper.append(table);
+      panel.append(wrapper);
+      details.replaceChildren(panel);
+    } catch (error) {
+      if (version === routeVersion) details.textContent = "Quest listing could not be loaded; see the original listing above.";
+      console.error(error);
+    }
     return;
   }
   addLegacyLink(content, "Original quest entry ↗", "quest", `${quest.file}.htm`, id);
@@ -241,6 +275,22 @@ async function questPage(id, data, version) {
         const requirement = element("p", "hint", next.textContent.trim());
         details.append(requirement);
         rewards = null;
+      }
+      if (next.matches("table.S") && next.rows.length > 1) {
+        const supplies = element("details", "panel quest-supplies");
+        supplies.append(element("summary", "", `Supplies (${next.rows.length - 1} entries)`));
+        const table = element("table", "data-table");
+        for (const row of next.rows) {
+          const result = element("tr");
+          for (const cell of row.cells) {
+            const target = element(cell.tagName.toLowerCase());
+            target.append(oldText(cell));
+            result.append(target);
+          }
+          table.append(result);
+        }
+        supplies.append(table);
+        details.append(supplies);
       }
       if (!next.matches("table.t")) continue;
       if (!rewards) {
@@ -362,7 +412,7 @@ function weaponTable(parent, table, id, index) {
     section.querySelector(".actions a").href = originalPage("buki", `${table.file}#${row.anchor}`);
   }
   const actions = element("p", "actions");
-  actions.append(link("Original table entry ↗", "#"));
+  actions.append(link("Original Ferias entry ↗", "#"));
   section.append(display, actions);
   select.addEventListener("change", show);
   show();

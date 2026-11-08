@@ -113,14 +113,16 @@ for (const [id, value] of Object.entries(oldQuests.Name)) {
 // event/special quests exist only in the HTML tables; index those too.
 const questDirectory = path.join(root, "archive/ferias/quest");
 const questDetailsByFile = new Map();
+const questAnchorsByFile = new Map();
 const plain = html => html.replace(/<i\b[^>]*>[\s\S]*?<\/i>/gi, "")
   .replace(/<[^>]*>/g, "").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&")
   .replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").trim();
 for (const file of fs.readdirSync(questDirectory).filter(name => name.endsWith(".htm"))) {
   const html = fs.readFileSync(path.join(questDirectory, file), "utf8");
   const detailIds = new Set();
+  questAnchorsByFile.set(file.slice(0, -4), new Set([...html.matchAll(/\bid=["']?l([a-z0-9]{4})(?=["'\s>])/gi)].map(([, id]) => id.toUpperCase())));
   for (const [table] of html.matchAll(/<table\s+class=["']mei["'][\s\S]*?<\/table>/gi)) {
-    const id = /<th\b[^>]*\bid=["']?l([0-9a-f]{4})["']?/i.exec(table)?.[1].toUpperCase();
+    const id = /<th\b[^>]*\bid=["']?l([a-z0-9]{4})["']?/i.exec(table)?.[1].toUpperCase();
     if (!id) continue;
     detailIds.add(id);
     const row = /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi;
@@ -140,6 +142,7 @@ for (const file of fs.readdirSync(questDirectory).filter(name => name.endsWith("
 for (const [id, quest] of Object.entries(quests.names)) {
   quest.sourceAvailable = questDetailsByFile.has(quest.file);
   quest.detailAvailable = questDetailsByFile.get(quest.file)?.has(id) || false;
+  quest.sourceAnchorAvailable = questAnchorsByFile.get(quest.file)?.has(id) || false;
 }
 write("quests.json", quests);
 
@@ -276,4 +279,5 @@ for (const [itemId, text] of Object.entries(oldOther.Shop)) {
 }
 write("item-shops.json", shops);
 require("./build-weapons");
+require("./build-gear");
 require("./build-wiki-details");

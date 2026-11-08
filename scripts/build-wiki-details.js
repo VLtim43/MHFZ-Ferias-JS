@@ -24,16 +24,23 @@ function tableAt(html, start) {
   return "";
 }
 
-const questFiles = new Set(Object.values(quests.names).filter(quest => quest.detailAvailable).map(quest => quest.file));
+const questFiles = new Set(Object.values(quests.names).filter(quest => quest.sourceAnchorAvailable).map(quest => quest.file));
 for (const file of questFiles) {
   const html = fs.readFileSync(path.join(archive, "quest", `${file}.htm`), "utf8");
   const headers = [...html.matchAll(/<table\s+class=["']mei["'][^>]*>/gi)];
   const entries = {};
   for (let i = 0; i < headers.length; i++) {
-    const id = /<th\b[^>]*\bid=["']?l([0-9a-f]{4})["']?/i.exec(tableAt(html, headers[i].index))?.[1].toUpperCase();
+    const id = /<th\b[^>]*\bid=["']?l([a-z0-9]{4})["']?/i.exec(tableAt(html, headers[i].index))?.[1].toUpperCase();
     if (!id || quests.names[id]?.file !== file || !quests.names[id].detailAvailable) continue;
     const end = html.search(/<\/body>/i);
     entries[id] = html.slice(headers[i].index, headers[i + 1]?.index ?? (end < 0 ? html.length : end)).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+  }
+  const listings = [...html.matchAll(/<div\b[^>]*\bid=["']?l([a-z0-9]{4})(?=["'\s>])[^>]*>/gi)];
+  const end = html.search(/<\/body>/i);
+  for (let i = 0; i < listings.length; i++) {
+    const id = listings[i][1].toUpperCase();
+    if (quests.names[id]?.file !== file || !quests.names[id].sourceAnchorAvailable || entries[id]) continue;
+    entries[id] = html.slice(listings[i].index, listings[i + 1]?.index ?? (end < 0 ? html.length : end)).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
   }
   write("quest-details", file, entries);
 }

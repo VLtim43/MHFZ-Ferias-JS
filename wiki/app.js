@@ -5,10 +5,12 @@ let items = {};
 let ids = [];
 const content = document.getElementById("content");
 const rankNames = { Kai: "Low Rank", Zyoui: "High Rank", Sugo: "Elite / HR5", G: "G Rank" };
+const armorPieceIcons = { h: "076", b: "077", a: "078", w: "079", l: "074", H: "076", B: "077" };
 const recentKey = "frontier-wiki-recent-items";
 let sourceDataPromise;
 const itemUsesPromises = new Map();
 let itemUsesIndexPromise;
+let gearUnavailablePromise;
 let routeVersion = 0;
 
 function recentItems() {
@@ -79,10 +81,12 @@ function requirement(value) {
 
 function route() {
   const hash = location.hash.slice(1);
-  const match = /^\/(items|quests|weapons|monsters)(?:\/([a-z0-9-]+))?(?:\?(.*))?\/?$/i.exec(hash);
-  if (!match || (match[1] === "items" && match[2] && match[2].length !== 4) || (match[1] === "quests" && match[2] && match[2].length !== 4) || (match[1] === "weapons" && match[2] && match[2].length !== 5)) return { section: "items", query: "" };
+  const match = /^\/(items|quests|weapons|monsters|armor|decorations)(?:\/([a-z0-9-]+))?(?:\?(.*))?\/?$/i.exec(hash);
+  if (!match || (match[1] === "items" && match[2] && match[2].length !== 4) || (match[1] === "quests" && match[2] && match[2].length !== 4) || (["weapons", "armor", "decorations"].includes(match[1].toLowerCase()) && match[2] && match[2].length !== 5)) return { section: "items", query: "" };
   const search = new URLSearchParams(match[3] || "");
-  return { section: match[1].toLowerCase(), id: match[1].toLowerCase() === "monsters" ? match[2]?.toLowerCase() : match[2]?.toUpperCase(), query: search.get("q") || "", type: search.get("type") || "", category: search.get("category") || "", rank: search.get("rank") || "", variant: search.get("variant") || "" };
+  const section = match[1].toLowerCase();
+  const id = ["armor", "decorations"].includes(section) ? match[2] && match[2][0] + match[2].slice(1).toUpperCase() : section === "monsters" ? match[2]?.toLowerCase() : match[2]?.toUpperCase();
+  return { section, id, query: search.get("q") || "", type: search.get("type") || "", category: search.get("category") || "", rank: search.get("rank") || "", variant: search.get("variant") || "" };
 }
 
 function listPage(query) {
@@ -290,9 +294,9 @@ function showSources(id, sources) {
   select(Math.max(0, rankPanels.findIndex(entry => entry.hasData)));
 }
 
-function showItemUses(id, target, data) {
+function showItemUses(id, target, data, unavailable) {
   target.replaceChildren();
-  const groups = [["weapons", "Weapons", "063"], ["armor", "Armor", "077"], ["decorations", "Decorations & cuffs", "077"]];
+  const groups = [["weapons", "Weapons", "063"], ["armor", "Armor", "077"], ["decorations", "Decorations & cuffs", "044"]];
   const uses = data[id] || {};
   for (const [key, heading, icon] of groups) {
     const entries = uses[key] || [];
@@ -301,24 +305,33 @@ function showItemUses(id, target, data) {
     const title = element("h3", "", `${heading} (${entries.length.toLocaleString()})`);
     title.prepend(sectionIcon(icon));
     const list = element("ul", "source-list");
+    if (entries.length > 100) {
+      list.tabIndex = 0;
+      list.setAttribute("aria-label", `${heading} made from this item`);
+    }
     let shown = 0;
-    const more = element("button", "day-link", "Show more");
-    more.type = "button";
+    const progress = element("p", "hint");
     function appendBatch() {
+      const batch = document.createDocumentFragment();
       for (const entry of entries.slice(shown, shown + 100)) {
         const row = element("li");
+        if (key === "armor" && armorPieceIcons[entry.id[0]]) row.append(sectionIcon(armorPieceIcons[entry.id[0]]));
         if (key === "weapons" && !entry.nameMissing && /^[0-9A-D]/.test(entry.id)) row.append(link(entry.name, `#/weapons/${entry.id}`));
+        else if (key !== "weapons" && !entry.nameMissing && !unavailable.has(entry.id)) row.append(link(entry.name, `#/${key === "armor" ? "armor" : "decorations"}/${entry.id}`));
         else row.append(element("span", "", entry.name));
         const details = [entry.craft, entry.level && (entry.level === "Base" ? "Base" : `Lv ${entry.level}`), `× ${entry.quantity}`, entry.nameMissing && "Name unavailable in source"].filter(Boolean);
         row.append(element("small", "", ` · ${details.join(" · ")}`));
-        list.append(row);
+        batch.append(row);
       }
+      list.append(batch);
       shown = Math.min(shown + 100, entries.length);
-      more.hidden = shown === entries.length;
+      progress.textContent = shown < entries.length ? `Showing ${shown.toLocaleString()} of ${entries.length.toLocaleString()} · scroll for more` : "";
     }
-    more.addEventListener("click", appendBatch);
+    list.addEventListener("scroll", () => {
+      if (shown < entries.length && list.scrollTop + list.clientHeight >= list.scrollHeight - 120) appendBatch();
+    });
     appendBatch();
-    section.append(title, list, more);
+    section.append(title, list, progress);
     target.append(section);
   }
   if (!target.children.length) target.append(element("p", "empty", "No equipment uses recorded for this item."));
@@ -350,25 +363,31 @@ async function detailPage(id) {
   const actions = element("div", "actions");
   actions.append(link("View remaining original item details ↗", originalPage("sozai", `sozai.htm?${id}`)));
   panel.append(actions);
-  content.append(panel, element("h2", "section-head", "Where to find it"));
+  const layout = element("div", "item-detail-layout");
+  const main = element("div");
+  main.append(panel, element("h2", "section-head", "Where to find it"));
   const sources = element("div", "", "Loading sources…");
+  main.append(sources);
   const usesSection = element("section", "panel");
   usesSection.append(element("h2", "", "Used to make"));
-  const useButton = element("button", "day-link", "Load equipment uses");
-  useButton.type = "button";
-  const usesTarget = element("div");
-  useButton.addEventListener("click", async () => {
-    useButton.disabled = true;
-    usesTarget.textContent = "Loading equipment uses…";
+  const usesTarget = element("div", "", "Loading equipment uses…");
+  usesSection.append(usesTarget);
+  layout.append(main, usesSection);
+  content.append(layout);
+  async function loadUses() {
     try {
       if (!itemUsesIndexPromise) itemUsesIndexPromise = loadData("item-uses/index").catch(error => {
         itemUsesIndexPromise = null;
         throw error;
       });
-      const available = await itemUsesIndexPromise;
+      if (!gearUnavailablePromise) gearUnavailablePromise = loadData("gear-unavailable").then(ids => new Set(ids)).catch(error => {
+        gearUnavailablePromise = null;
+        throw error;
+      });
+      const [available, unavailable] = await Promise.all([itemUsesIndexPromise, gearUnavailablePromise]);
       const prefix = available.includes(id) ? id : id.slice(0, 3);
       if (!available.includes(prefix)) {
-        if (version === routeVersion) showItemUses(id, usesTarget, {});
+        if (version === routeVersion) showItemUses(id, usesTarget, {}, unavailable);
         return;
       }
       if (!itemUsesPromises.has(prefix)) itemUsesPromises.set(prefix, loadData(`item-uses/${prefix}`).catch(error => {
@@ -376,17 +395,15 @@ async function detailPage(id) {
         throw error;
       }));
       const data = await itemUsesPromises.get(prefix);
-      if (version === routeVersion) showItemUses(id, usesTarget, data);
+      if (version === routeVersion) showItemUses(id, usesTarget, data, unavailable);
     } catch (error) {
       if (version === routeVersion) {
-        usesTarget.textContent = "Could not load equipment uses. Please try again.";
-        useButton.disabled = false;
+        usesTarget.textContent = "Could not load equipment uses. Please reload and try again.";
       }
       console.error(error);
     }
-  });
-  usesSection.append(useButton, usesTarget);
-  content.append(sources, usesSection);
+  }
+  loadUses();
   try {
     sources.data = await getSources();
     if (version === routeVersion) showSources(id, sources);
@@ -408,6 +425,8 @@ function render() {
   }
   if (current.section === "monsters") {
     monsterPage(current);
+  } else if (current.section === "armor" || current.section === "decorations") {
+    gearPage(current);
   } else if (current.section !== "items") {
     catalogPage(current);
   } else {

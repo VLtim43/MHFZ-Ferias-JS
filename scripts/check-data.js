@@ -63,18 +63,30 @@ for (const [source, group] of [["weaponMaterialsByItem", "weapons"], ["armorMate
 }
 const missing = Object.entries(quests.names).filter(([, quest]) => !fs.existsSync(path.join(root, "archive/ferias/quest", `${quest.file}.htm`)));
 const questFiles = new Map();
+const packagedQuestFiles = new Map();
 let unsupportedQuestDetails = 0;
+let localQuestListings = 0;
+let absentQuestEntries = 0;
 for (const [id, quest] of Object.entries(quests.names)) {
   assert.equal(quest.sourceAvailable, fs.existsSync(path.join(root, "archive/ferias/quest", `${quest.file}.htm`)));
-  if (!quest.sourceAvailable) { assert.equal(quest.detailAvailable, false); continue; }
+  if (!quest.sourceAvailable) { assert.equal(quest.detailAvailable, false); assert.equal(quest.sourceAnchorAvailable, false); continue; }
   if (!questFiles.has(quest.file)) questFiles.set(quest.file, fs.readFileSync(path.join(root, "archive/ferias/quest", `${quest.file}.htm`), "utf8"));
   const html = questFiles.get(quest.file);
+  assert.equal(quest.sourceAnchorAvailable, new RegExp(`\\bid=["']?l${id}(?=["'\\s>])`, "i").test(html), `Quest source anchor differs: ${id}`);
+  if (quest.sourceAnchorAvailable) {
+    if (!packagedQuestFiles.has(quest.file)) packagedQuestFiles.set(quest.file, read(`quest-details/${quest.file}`));
+    assert.ok(packagedQuestFiles.get(quest.file)[id], `Missing local quest entry ${id}`);
+  }
   if (quest.detailAvailable) {
     assert.match(html, new RegExp(`<th\\b[^>]*\\bid=["']?l${id}(?=["'\\s>])`, "i"), `Quest detail anchor missing: ${id}`);
-  } else unsupportedQuestDetails++;
+  } else {
+    unsupportedQuestDetails++;
+    if (quest.sourceAnchorAvailable) localQuestListings++;
+    else absentQuestEntries++;
+  }
 }
 console.log(`Quest entries without archived detail files: ${missing.length} (${missing.map(([id]) => id).join(", ")})`);
-console.log(`Quest entries in existing files without a supported detail table: ${unsupportedQuestDetails}.`);
+console.log(`Quest entries without a standard detail table: ${unsupportedQuestDetails} (${localQuestListings} local listings, ${absentQuestEntries} missing source entries).`);
 const weaponIndex = read("weapons-index");
 const weaponPages = read("weapon-pages");
 const weaponPrefixes = read("weapon-details/index");
@@ -138,4 +150,33 @@ for (const [file, anchors] of fileAnchors) {
   for (const anchor of anchors) assert.ok(html.includes(`id="${anchor}"`), `Missing original weapon row: ${file}#${anchor}`);
 }
 console.log(`Weapons: ${seenWeapons.size.toLocaleString()} detailed, ${weaponRows.toLocaleString()} rows, ${towerTables} Tower tables, ${evolutionLevel100} Lv100 evolution rows; all linked items resolve.`);
+const gearIndex = read("gear-index");
+const gearTrees = read("gear-trees");
+const unavailableGear = new Set(read("gear-unavailable"));
+for (const id of Object.keys(equipment.armorAndDecorationNames)) assert.equal(unavailableGear.has(id), !gearIndex[id], `Wrong gear availability: ${id}`);
+const gearPrefixes = new Set(Object.keys(gearIndex).map(id => id.slice(0, 3)));
+let gearCount = 0;
+let refinementLinks = 0;
+for (const prefix of gearPrefixes) for (const [id, record] of Object.entries(read(`gear-details/${prefix}`))) {
+  assert.ok(gearIndex[id], `Unknown gear detail ${id}`);
+  assert.equal(record.columns.length, record.cells.length, `Wrong gear columns: ${id}`);
+  assert.equal(record.file, gearIndex[id].file, `Wrong gear source: ${id}`);
+  for (const cell of record.cells) for (const part of [...(cell.parts || []), ...(cell.lines || []).flatMap(line => line.parts || [])]) {
+    if (part.itemId) assert.ok(items[part.itemId], `Unknown gear material ${part.itemId}`);
+    if (part.gearId && part.gearId[0] === "d") refinementLinks++;
+  }
+  gearCount++;
+}
+assert.ok(refinementLinks >= 4179, `Missing armor refinement links (${refinementLinks})`);
+assert.equal(gearCount, Object.keys(gearIndex).length, "Missing gear detail rows");
+for (const [id, key] of Object.entries(gearTrees.byGear)) {
+  assert.ok(gearIndex[id], `Unknown armor tree piece: ${id}`);
+  assert.ok(gearTrees.trees[key]?.some(node => node.pieces.includes(id)), `Missing armor tree node: ${id}`);
+}
+assert.ok(gearIndex.h0001 && gearIndex.d031F && gearIndex.s0001);
+for (const usesForItem of Object.values(uses)) for (const entry of [...usesForItem.armor, ...usesForItem.decorations]) {
+  if (entry.nameMissing || gearIndex[entry.id]) continue;
+  assert.ok(unavailableGear.has(entry.id), `Item use links to unknown gear ${entry.id}`);
+}
+console.log(`Armor and decorations: ${gearCount.toLocaleString()} detailed records, ${gearPrefixes.size} shards, ${Object.keys(gearTrees.byGear).length.toLocaleString()} tree links.`);
 console.log(`Validated ${Object.keys(items).length.toLocaleString()} items and ${prefixes.length} equipment-use shards.`);
