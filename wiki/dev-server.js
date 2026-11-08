@@ -1,11 +1,11 @@
-// Preview the new wiki and its original data files without installing packages.
+// Preview the new wiki and generated data without installing packages.
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
 const port = Number(process.env.PORT) || 8000;
-const types = { ".html": "text/html", ".htm": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".jpg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp" };
+const types = { ".html": "text/html", ".htm": "text/html", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".png": "image/png", ".jpg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp" };
 
 http.createServer((request, response) => {
   let pathname;
@@ -25,7 +25,7 @@ http.createServer((request, response) => {
       response.writeHead(404).end("Not found");
       return;
     }
-    response.writeHead(200, { "Content-Type": `${types[path.extname(file)] || "application/octet-stream"}${[".html", ".htm", ".js", ".css"].includes(path.extname(file)) ? "; charset=utf-8" : ""}` });
+    response.writeHead(200, { "Content-Type": `${types[path.extname(file)] || "application/octet-stream"}${[".html", ".htm", ".js", ".json", ".css"].includes(path.extname(file)) ? "; charset=utf-8" : ""}` });
     fs.createReadStream(file).pipe(response);
   });
-}).listen(port, () => console.log(`Open http://localhost:${port}/wiki/`));
+}).listen(port, () => console.log(`Open http://localhost:${port}/`));

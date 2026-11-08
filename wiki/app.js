@@ -1,9 +1,8 @@
 "use strict";
 
-// The original files remain the source of truth. Item IDs are stable, unlike names or ranks.
-const items = setItem();
-const japaneseItems = setItemJP();
-const ids = Object.keys(items).filter(id => items[id][0] && japaneseItems[id]);
+// Generated datasets live in data/; the original sources remain untouched in archive/ferias/.
+let items = {};
+let ids = [];
 const content = document.getElementById("content");
 const rankNames = { Kai: "Low Rank", Zyoui: "High Rank", Sugo: "HR100 / Elite", G: "G Rank" };
 const recentKey = "frontier-wiki-recent-items";
@@ -42,7 +41,7 @@ function link(label, href, className) {
 
 function sectionIcon(number) {
   const img = element("img", "section-icon");
-  img.src = `../img/mhficons/tile${number}.png`;
+  img.src = `../assets/mhficons/tile${number}.png`;
   img.alt = "";
   return img;
 }
@@ -51,13 +50,13 @@ function monsterIcon(name) {
   const img = element("img", "monster-icon");
   const basename = name.replace(/[^\p{L}\p{N}-]/gu, "");
   if (!basename) return null;
-  img.src = `../img/monsicons/${basename}.webp`;
+  img.src = `../assets/monsicons/${basename}.webp`;
   img.alt = "";
   img.loading = "lazy";
   img.addEventListener("error", () => {
     const lower = basename.toLowerCase();
     if (img.src.endsWith(`/${lower}.webp`)) img.remove();
-    else img.src = `../img/monsicons/${lower}.webp`;
+    else img.src = `../assets/monsicons/${lower}.webp`;
   });
   return img;
 }
@@ -74,8 +73,10 @@ function requirement(value) {
 
 function route() {
   const hash = location.hash.slice(1);
-  const match = /^\/items\/([0-9a-f]{4})\/?$/i.exec(hash);
-  return match ? { id: match[1].toUpperCase() } : { query: hash.startsWith("/items?") ? new URLSearchParams(hash.slice(7)).get("q") || "" : "" };
+  const match = /^\/(items|quests|weapons|monsters)(?:\/([a-z0-9-]+))?(?:\?(.*))?\/?$/i.exec(hash);
+  if (!match || (match[1] === "items" && match[2] && match[2].length !== 4) || (match[1] === "quests" && match[2] && match[2].length !== 4) || (match[1] === "weapons" && match[2] && match[2].length !== 5)) return { section: "items", query: "" };
+  const search = new URLSearchParams(match[3] || "");
+  return { section: match[1].toLowerCase(), id: match[1].toLowerCase() === "monsters" ? match[2]?.toLowerCase() : match[2]?.toUpperCase(), query: search.get("q") || "", type: search.get("type") || "", rank: search.get("rank") || "", variant: search.get("variant") || "" };
 }
 
 function listPage(query) {
@@ -97,15 +98,15 @@ function listPage(query) {
   function itemCard(id) {
     const row = link("", `#/items/${id}`, "result");
     const name = element("span");
-    name.append(element("span", "", items[id][0]), element("small", "", japaneseItems[id][0]));
+    name.append(element("span", "", items[id].name), element("small", "", items[id].nameJa));
     row.append(sectionIcon("036"), name, element("span", "result-code", id));
     return row;
   }
 
   function update() {
     const q = input.value.trim().toLocaleLowerCase();
-    const matches = q ? ids.filter(id => id.toLowerCase() === q || items[id][0].toLocaleLowerCase().includes(q) || japaneseItems[id][0].toLocaleLowerCase().includes(q)) : [];
-    matches.sort((a, b) => (items[a][5] || "").localeCompare(items[b][5] || "") || a.localeCompare(b));
+    const matches = q ? ids.filter(id => id.toLowerCase() === q || items[id].name.toLocaleLowerCase().includes(q) || items[id].nameJa.toLocaleLowerCase().includes(q)) : [];
+    matches.sort((a, b) => (items[a].sortKey || "").localeCompare(items[b].sortKey || "") || a.localeCompare(b));
     const visible = matches.slice(0, 100);
     count.textContent = q ? `${matches.length.toLocaleString()} item${matches.length === 1 ? "" : "s"}${matches.length > 100 ? " · showing first 100; refine your search" : ""}` : "Enter a name or item ID to search.";
     results.replaceChildren();
@@ -128,24 +129,18 @@ function listPage(query) {
   update();
 }
 
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = src;
-    script.onload = resolve;
-    script.onerror = () => reject(new Error(`Could not load ${src}`));
-    document.head.append(script);
-  });
+async function loadData(name) {
+  const response = await fetch(`../data/${name}.json`);
+  if (!response.ok) throw new Error(`Could not load data/${name}.json (${response.status})`);
+  return response.json();
 }
 
 function getSources() {
-  // Only load the extra indexes when an item detail is opened.
+  // Only load the acquisition indexes when an item detail is opened.
   if (!sourceDataPromise) {
     sourceDataPromise = Promise.all([
-      loadScript("../sozai/mos_sozai.js"),
-      loadScript("../sozai/que_sozai.js"),
-      loadScript("../sozai/sai_sozai.js")
-    ]).then(() => ({ monsters: setMonster(), quests: setQuest(), gathering: setSaisyu() }));
+      loadData("item-sources"), loadData("monsters"), loadData("quests")
+    ]).then(([byItem, monsters, quests]) => ({ byItem, monsters, quests }));
   }
   return sourceDataPromise;
 }
@@ -172,8 +167,6 @@ function sourceGroup(parent, name, entries, icon) {
   parent.append(group);
 }
 
-const placeNames = ["General", "Jungle", "Desert", "Swamp", "Snowy Mountains", "Volcano", "Forest and Hills", "Tower", "Great Forest", "Interception Base", "Fortress", "Town", "Battleground", "Arena", "Gorge", "Solitude Island", "Highlands", "Tidal Island", "Polar Sea", "Flower Field", "White Lake", "Painted Falls"];
-const placeIds = ["", "mitu", "saba", "numa", "yuki", "kaza", "mori", "tou", "zyu", "def", "toride", "siro", "kessen", "tougi", "kyou", "sima", "kou", "shio", "kyoku", "hana", "bya", "sai"];
 const seasonNames = ["Warm", "Cold", "Breeding"];
 const rankIds = { Kai: "kai", Zyoui: "zyoui", Sugo: "sugo", G: "g" };
 
@@ -193,31 +186,27 @@ function gatheringTable(parent, data, rank) {
   previewLink.append(image);
   map.append(previewLink);
 
-  const seasons = data.split("^");
-  seasons.forEach((season, index) => {
+  seasonNames.forEach(season => {
     const tr = element("tr");
-    tr.append(element("th", "", seasonNames[index]));
+    tr.append(element("th", "", season));
     const cell = element("td");
-    for (const value of season.split(",").filter(Boolean)) {
-      const fields = value.split("|");
-      const locationId = placeIds[Number(fields[0])];
+    for (const entryData of data[season] || []) {
+      const locationId = entryData.mapId;
       const entry = element("div", "gather-entry");
-      entry.append(document.createTextNode(`${placeNames[Number(fields[0])] || fields[0]} Area: ${fields[3].split(/[hy]/)[0]} `));
+      entry.append(document.createTextNode(`${entryData.location} Area: ${entryData.spot} `));
       function timeLink(text, area, point, percentage) {
         const button = element("button", text === "Day" ? "day-link" : "night-link", text);
         button.type = "button";
         button.addEventListener("click", () => {
           if (!locationId) return;
-          image.src = `../img/saisyu/${locationId}-${area}.png`;
-          previewLink.href = `../saisyu/${locationId}-${rankIds[rank]}.htm#l${point}`;
+          image.src = `../assets/saisyu/${locationId}-${area}.png`;
+          previewLink.href = `../archive/ferias/saisyu/${locationId}-${rankIds[rank]}.htm#l${point}`;
           previewLink.style.display = "block";
         });
         entry.append(button, document.createTextNode(` ${percentage || "?"}% `));
       }
-      const firstTime = fields[3].match(/([hy])(\d*)$/);
-      if (firstTime) timeLink(firstTime[1] === "h" ? "Day" : "Night", fields[1], fields[2], firstTime[2]);
-      else entry.append(document.createTextNode(fields[3]));
-      if (fields.length > 4) timeLink("Night", fields[4], fields[5], fields[6]);
+      if (entryData.time) timeLink(entryData.time, entryData.area, entryData.point, entryData.chance);
+      if (entryData.night) timeLink("Night", entryData.night.area, entryData.night.point, entryData.night.chance);
       cell.append(entry);
     }
     tr.append(cell);
@@ -230,29 +219,24 @@ function gatheringTable(parent, data, rank) {
 
 function showSources(id, sources) {
   sources.replaceChildren();
-  const { monsters, quests, gathering } = sources.data;
+  const { monsters, quests, byItem } = sources.data;
   const tabs = element("div", "rank-tabs");
   tabs.setAttribute("role", "tablist");
   tabs.setAttribute("aria-label", "Item source rank");
   const display = element("div", "rank-content");
   const rankPanels = [];
   for (const [key, label] of Object.entries(rankNames)) {
-    const monsterEntries = (monsters[key][id] || "").split(",").filter(Boolean).map(value => {
-      const [monsterId, detail] = value.split("|");
-      return { name: monsters.Name[monsterId] || monsterId, monsterName: monsters.Name[monsterId], detail, href: `../mons/${monsterId}_h.htm` };
+    const group = byItem[id]?.[key] || {};
+    const monsterEntries = (group.monsters || []).map(({ monsterId, detail }) => {
+      return { name: monsters.names[monsterId] || monsterId, monsterName: monsters.names[monsterId], detail, href: monsters.pages?.[monsterId] ? `#/monsters/${monsters.slugs?.[monsterId] || monsterId}` : `../archive/ferias/mons/${monsterId}_h.htm` };
     });
-    const questEntries = (quests[key][id] || "").split(",").filter(Boolean).map(value => {
-      const questId = value.slice(0, 4);
-      const quest = quests.Name[questId];
-      if (!quest) return { name: `Quest ${questId}`, detail: value.slice(4) };
-      const parts = quest.split(",");
-      const reward = value.slice(6).split("%");
-      const rewardType = (quests.Htype[parseInt(value.slice(4, 6), 16)] || "Reward").replace(/<[^>]*>/g, "");
-      const amount = reward[0] ? ` · ${reward[0]}x` : "";
-      const chance = reward[1] ? ` (${reward[1]}%)` : "";
-      return { name: parts.slice(4).join(",") || `Quest ${questId}`, detail: `${rewardType}${amount}${chance} · ID ${questId}`, href: `../quest/${parts[0]}.htm#l${questId}` };
+    const questEntries = (group.quests || []).map(({ questId, rewardType, quantity, chance }) => {
+      const quest = quests.names[questId];
+      if (!quest) return { name: `Quest ${questId}`, detail: "Source not named in original index" };
+      const type = (quests.rewardTypes[rewardType] || "Reward").replace(/<[^>]*>/g, "");
+      return { name: quest.title || `Quest ${questId}`, detail: `${type}${quantity ? ` · ${quantity}x` : ""}${chance ? ` (${chance}%)` : ""} · ID ${questId}`, href: `#/quests/${questId}` };
     });
-    const gatherData = gathering[key][id];
+    const gatherData = group.gathering;
     const button = element("button", "rank-tab", label);
     button.type = "button";
     button.setAttribute("role", "tab");
@@ -300,20 +284,20 @@ async function detailPage(id) {
   rememberItem(id);
   const version = ++routeVersion;
   content.append(link("← All items", "#/items", "breadcrumbs"));
-  const title = element("h1", "item-title", item[0]);
+  const title = element("h1", "item-title", item.name);
   title.prepend(sectionIcon("036"));
-  content.append(title, element("p", "muted", `${japaneseItems[id][0]} · Item ${id}`));
+  content.append(title, element("p", "muted", `${item.nameJa} · Item ${id}`));
   const panel = element("section", "panel");
-  panel.append(element("h2", "", "Item details"), element("p", "", item[6] || "No description available."));
+  panel.append(element("h2", "", "Item details"), element("p", "", item.description || "No description available."));
   const facts = element("dl", "facts");
-  for (const [label, value] of [["ID", id], ["Rarity", item[1]], ["Price", item[2]], ["Stack", item[3]], ["Required rank", requirement(item[4])]]) {
+  for (const [label, value] of [["ID", id], ["Rarity", item.rarity], ["Price", item.price], ["Stack", item.stack], ["Required rank", requirement(item.requiredRank)]]) {
     const fact = element("div");
     fact.append(element("dt", "", label), element("dd", "", String(value)));
     facts.append(fact);
   }
   panel.append(facts);
   const actions = element("div", "actions");
-  actions.append(link("View original item page ↗", `../sozai/sozai.htm?${id}`));
+  actions.append(link("View original item page ↗", `../archive/ferias/sozai/sozai.htm?${id}`));
   panel.append(actions);
   content.append(panel, element("h2", "section-head", "Where to find it"));
   const sources = element("div", "", "Loading sources…");
@@ -330,10 +314,29 @@ async function detailPage(id) {
 function render() {
   ++routeVersion;
   const current = route();
-  document.title = current.id && items[current.id] ? `${items[current.id][0]} · Frontier Wiki` : "Items · Frontier Wiki";
-  if (current.id) detailPage(current.id);
-  else listPage(current.query);
+  for (const nav of document.querySelectorAll(".nav-item[data-section]")) {
+    const active = nav.dataset.section === current.section;
+    nav.classList.toggle("active", active);
+    if (active) nav.setAttribute("aria-current", "page");
+    else nav.removeAttribute("aria-current");
+  }
+  if (current.section === "monsters") {
+    monsterPage(current);
+  } else if (current.section !== "items") {
+    catalogPage(current);
+  } else {
+    document.title = current.id && items[current.id] ? `${items[current.id].name} · Frontier Wiki` : "Items · Frontier Wiki";
+    if (current.id) detailPage(current.id);
+    else listPage(current.query);
+  }
 }
 
 window.addEventListener("hashchange", render);
-render();
+loadData("items").then(data => {
+  items = data;
+  ids = Object.keys(items).filter(id => items[id].name);
+  render();
+}).catch(error => {
+  content.textContent = "Could not load item data. Serve the repository root with node wiki/dev-server.js and try again.";
+  console.error(error);
+});

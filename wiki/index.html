@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Frontier Wiki · Items</title>
   <link rel="stylesheet" href="style.css">
-  <script defer src="../sozai/item.js"></script>
   <script defer src="app.js"></script>
+  <script defer src="catalog.js"></script>
+  <script defer src="monsters.js"></script>
 </head>
 <body>
   <div class="layout">
@@ -14,12 +15,12 @@
       <a class="brand" href="#/items">Frontier <span>Wiki</span></a>
       <p class="nav-label">Browse</p>
       <nav aria-label="Wiki sections">
-        <a class="nav-item active" href="#/items" aria-current="page"><img src="../img/mhficons/tile036.png" alt="">Items</a>
-        <span class="nav-item disabled" title="Coming later"><img src="../img/mhficons/tile063.png" alt="">Weapons <small>Later</small></span>
-        <span class="nav-item disabled" title="Coming later"><img src="../img/mhficons/tile077.png" alt="">Armor <small>Later</small></span>
-        <span class="nav-item disabled" title="Coming later"><img src="../img/mhficons/tile024.png" alt="">Monsters <small>Later</small></span>
-        <span class="nav-item disabled" title="Coming later"><img src="../img/mhficons/tile038.png" alt="">Quests <small>Later</small></span>
-        <span class="nav-item disabled" title="Coming later"><img src="../img/mhficons/tile017.png" alt="">Gathering <small>Later</small></span>
+        <a class="nav-item active" href="#/items" data-section="items" aria-current="page"><img src="../assets/mhficons/tile036.png" alt="">Items</a>
+        <a class="nav-item" href="#/weapons" data-section="weapons"><img src="../assets/mhficons/tile063.png" alt="">Weapons</a>
+        <span class="nav-item disabled" title="Coming later"><img src="../assets/mhficons/tile077.png" alt="">Armor <small>Later</small></span>
+        <a class="nav-item" href="#/monsters" data-section="monsters"><img src="../assets/mhficons/tile024.png" alt="">Monsters</a>
+        <a class="nav-item" href="#/quests" data-section="quests"><img src="../assets/mhficons/tile038.png" alt="">Quests</a>
+        <span class="nav-item disabled" title="Coming later"><img src="../assets/mhficons/tile017.png" alt="">Gathering <small>Later</small></span>
       </nav>
       <p class="sidebar-note">An easier way to explore the original Ferias data. More sections will follow.</p>
     </aside>
