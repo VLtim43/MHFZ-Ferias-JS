@@ -14,6 +14,9 @@ const groups = Object.fromEntries(Object.entries(equipment.weaponGroups).map(([k
 const categoryAliases = { "ＳＰ": "SP", "ＨＣ": "HC", Prizes: "Prize", Bundles: "Bundle", Subscriptions: "Subscription" };
 const index = {};
 const details = {};
+const trees = {};
+const treeByWeapon = {};
+const treeOwnFile = new Set();
 
 function write(file, data) {
   const filename = path.join(output, file);
@@ -87,6 +90,28 @@ for (const [file, ids] of files) {
         const label = categoryAliases[categoryNames[category]] || categoryNames[category];
         if (id && label && !index[id].categories.includes(label)) index[id].categories.push(label);
       }
+      for (const [position, [, branch]] of [...block.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)].entries()) {
+        const nodes = [];
+        for (const line of branch.split(/<br\s*\/?>/i)) {
+          const match = /^([\s\S]*?)<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>([\s\S]*)$/i.exec(line);
+          if (!match) continue;
+          const target = /^(?:([a-z_]+\.htm))?#l([0-9a-f]{4})$/i.exec(match[2]);
+          const targetFile = target?.[1] || file;
+          const weapon = target && files.get(targetFile)?.get(target[2].toUpperCase());
+          const depth = textFromHtml(match[1]).replace(/\n/g, "").trimEnd().length;
+          nodes.push({ depth, name: plain(match[3]), suffix: plain(match[4]), ...(weapon ? { id: weapon } : {}) });
+        }
+        if (nodes.length < 2) continue;
+        const key = `${file}:${category}:${position}`;
+        trees[key] = nodes;
+        for (const node of nodes) {
+          if (!node.id) continue;
+          const ownFile = ids.get(node.id.slice(1)) === node.id;
+          if (treeByWeapon[node.id] && (!ownFile || treeOwnFile.has(node.id))) continue;
+          treeByWeapon[node.id] = key;
+          if (ownFile) treeOwnFile.add(node.id);
+        }
+      }
     }
   }
   const header = /<thead>\s*<tr\b[^>]*>([\s\S]*?)<\/tr>/i.exec(html)?.[1];
@@ -130,6 +155,7 @@ for (const entry of Object.values(index)) {
 }
 
 write("weapons-index.json", index);
+write("weapon-trees.json", { byWeapon: treeByWeapon, trees });
 const shards = {};
 for (const [id, record] of Object.entries(details)) (shards[id.slice(0, 3)] ||= {})[id] = record;
 write("weapon-details/index.json", Object.keys(shards).sort());

@@ -42,6 +42,18 @@ p { margin: 0 0 12px; }
 .weapon-type-card .section-icon { width: 30px; height: 30px; }
 .weapon-type-name { font-weight: bold; flex: 1; }
 .weapon-type-card small { color: #bbb; width: 100%; padding-left: 39px; }
+.weapon-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, 560px); gap: 16px; align-items: start; }
+.weapon-detail-layout > * { min-width: 0; }
+.weapon-tree { position: sticky; top: 12px; }
+.weapon-tree-branches { overflow: auto; max-height: 75vh; line-height: 1.5; }
+.weapon-tree-branches > .weapon-tree-list { width: max-content; min-width: 100%; }
+.weapon-tree-list { list-style: none; margin: 0; padding: 0; }
+.weapon-tree-list .weapon-tree-list { padding-left: 14px; }
+.weapon-tree-list li { position: relative; padding: 2px 0 2px 14px; white-space: nowrap; }
+.weapon-tree-list .weapon-tree-list li::before { content: ""; position: absolute; left: 0; top: 12px; width: 11px; border-top: 1px solid #708090; }
+.weapon-tree-list .weapon-tree-list li::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 1px solid #708090; }
+.weapon-tree-list .weapon-tree-list li:last-child::after { bottom: auto; height: 12px; }
+.weapon-tree-current { background: #485967; font-weight: bold; }
 .load-more { display: block; margin: 12px auto; padding: 7px 14px; color: #fff; background: #485967; border: 2px ridge #708090; cursor: pointer; }
 .load-more[hidden] { display: none; }
 .result { display: block; padding: 5px 7px; border: 2px ridge #708090; text-decoration: none; min-width: 0; overflow-wrap: anywhere; }
@@ -71,6 +83,10 @@ p { margin: 0 0 12px; }
 .sharpness-p { background: violet; }
 .sharpness-s { background: cyan; }
 .reward-table { margin-top: 6px; }
+.quest-rewards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.quest-rewards .panel { min-width: 0; margin: 8px 0; }
+.quest-rewards .reward-table { table-layout: fixed; overflow-wrap: anywhere; }
+.quest-rewards .reward-table th { width: auto; }
 .facts { display: flex; flex-wrap: wrap; border: 2px ridge #708090; margin: 8px 0; padding: 0; }
 .facts div { display: flex; border-right: 2px ridge #708090; }
 .facts dt, .facts dd { padding: 3px 5px; margin: 0; }
@@ -134,7 +150,15 @@ p { margin: 0 0 12px; }
 .monster-section { margin-bottom: 12px; }
 .monster-section h2 { margin-bottom: 6px; }
 .monster-variants + .actions a + a, .monster-heading ~ .actions a + a { margin-left: 12px; }
+@media (max-width: 1200px) {
+  .weapon-detail-layout { grid-template-columns: minmax(0, 1fr); }
+  .weapon-tree { position: static; }
+}
+@media (max-width: 1100px) {
+  .quest-rewards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 700px) {
+  .quest-rewards { grid-template-columns: minmax(0, 1fr); }
   .layout { display: block; }
   .sidebar { border-right: 0; border-bottom: 2px ridge #708090; }
   .brand { margin: 0 0 6px; }

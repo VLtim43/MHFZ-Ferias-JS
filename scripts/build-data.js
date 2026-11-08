@@ -276,3 +276,4 @@ for (const [itemId, text] of Object.entries(oldOther.Shop)) {
 }
 write("item-shops.json", shops);
 require("./build-weapons");
+require("./build-wiki-details");

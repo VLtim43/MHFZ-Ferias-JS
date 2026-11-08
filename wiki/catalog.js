@@ -17,22 +17,22 @@ const weaponTypeIcons = {
 const weaponTags = { g: "G Rank", sp: "SP", neko: "RNG Cat", sinca: "Evolution" };
 let questCatalogPromise;
 let weaponCatalogPromise;
+let weaponTreesPromise;
 const weaponDetailPromises = new Map();
-const originalPages = new Map();
+const questDetailPromises = new Map();
 
 function catalogData(section) {
   if (section === "quests") return questCatalogPromise ||= loadData("quests");
   return weaponCatalogPromise ||= loadData("weapons-index");
 }
 
-function oldPage(folder, file) {
-  if (!/^[a-z0-9_-]+\.htm$/i.test(file)) return Promise.reject(new Error("Invalid original page name"));
-  const url = `../archive/ferias/${folder}/${file}`;
-  if (!originalPages.has(url)) originalPages.set(url, fetch(url).then(response => {
-    if (!response.ok) throw new Error(`Original page unavailable (${response.status})`);
-    return response.text();
-  }).then(text => new DOMParser().parseFromString(text, "text/html")));
-  return originalPages.get(url);
+function questDetails(file) {
+  if (!/^[a-z0-9_-]+$/i.test(file)) return Promise.reject(new Error("Invalid quest file"));
+  if (!questDetailPromises.has(file)) questDetailPromises.set(file, loadData(`quest-details/${file}`).catch(error => {
+    questDetailPromises.delete(file);
+    throw error;
+  }));
+  return questDetailPromises.get(file);
 }
 
 function catalogPage(current) {
@@ -202,7 +202,7 @@ function field(parent, label, value, weaponType) {
 
 function addLegacyLink(parent, label, folder, file, id) {
   const action = element("p", "actions");
-  action.append(link(label, `../archive/ferias/${folder}/${file}#l${id}`));
+  action.append(link(label, originalPage(folder, `${file}#l${id}`)));
   parent.append(action);
 }
 
@@ -222,8 +222,9 @@ async function questPage(id, data, version) {
   const details = element("div", "", "Loading the original quest table…");
   content.append(details);
   try {
-    const doc = await oldPage("quest", `${quest.file}.htm`);
+    const entries = await questDetails(quest.file);
     if (version !== routeVersion) return;
+    const doc = new DOMParser().parseFromString(entries[id] || "", "text/html");
     const header = doc.getElementById(`l${id}`)?.closest("table.mei");
     if (!header || !header.rows[1]) { details.textContent = "Detailed entry not found in the original quest table."; return; }
     details.replaceChildren();
@@ -234,12 +235,18 @@ async function questPage(id, data, version) {
     [...header.rows[1].cells].forEach((cell, index) => field(fields, headers[index]?.textContent.trim() || `Field ${index + 1}`, cell));
     panel.append(fields);
     details.append(panel);
+    let rewards;
     for (let next = header.nextElementSibling; next && !next.matches("table.mei"); next = next.nextElementSibling) {
       if (next.matches("div[class^=con]")) {
         const requirement = element("p", "hint", next.textContent.trim());
         details.append(requirement);
+        rewards = null;
       }
       if (!next.matches("table.t")) continue;
+      if (!rewards) {
+        rewards = element("div", "quest-rewards");
+        details.append(rewards);
+      }
       const rewardPanel = element("section", "panel");
       rewardPanel.append(element("h2", "", "Rewards"));
       const table = element("table", "data-table reward-table");
@@ -253,7 +260,7 @@ async function questPage(id, data, version) {
         table.append(result);
       }
       rewardPanel.append(table);
-      details.append(rewardPanel);
+      rewards.append(rewardPanel);
     }
   } catch (error) {
     if (version === routeVersion) details.textContent = "Detailed quest data could not be loaded; see the original entry above.";
@@ -352,7 +359,7 @@ function weaponTable(parent, table, id, index) {
     const row = table.rows[Number(select.value) || 0];
     const label = tower ? `${index[id].name} · Step ${Number(select.value) + 1 || 1}` : row.variant ? `${index[id].name} · Variant ${row.variant}` : row.level ? `${index[id].name} · Lv${row.level}` : index[id].name;
     weaponRowPanel(display, table, row, index, id[0], tower ? `Tower: ${label}` : label);
-    section.querySelector(".actions a").href = `../archive/ferias/buki/${table.file}#${row.anchor}`;
+    section.querySelector(".actions a").href = originalPage("buki", `${table.file}#${row.anchor}`);
   }
   const actions = element("p", "actions");
   actions.append(link("Original table entry ↗", "#"));
@@ -360,6 +367,36 @@ function weaponTable(parent, table, id, index) {
   select.addEventListener("change", show);
   show();
   parent.append(section);
+}
+
+function weaponTree(id, data) {
+  const nodes = data.trees[data.byWeapon[id]];
+  if (!nodes) return null;
+  const panel = element("aside", "panel weapon-tree");
+  panel.append(element("h2", "", "Weapon tree"), element("p", "hint", "☆ Directly craftable"));
+  const branches = element("div", "weapon-tree-branches");
+  const root = element("ul", "weapon-tree-list");
+  const ancestors = [];
+  for (const node of nodes) {
+    const depth = Math.min(node.depth, ancestors.length);
+    ancestors.length = depth;
+    const list = depth ? ancestors[depth - 1].querySelector(":scope > ul") || element("ul", "weapon-tree-list") : root;
+    if (depth && !list.parentElement) ancestors[depth - 1].append(list);
+    const row = element("li");
+    const label = element("span", node.id === id ? "weapon-tree-current" : "");
+    if (node.id) {
+      const entry = link(node.name, `#/weapons/${node.id}`);
+      if (node.id === id) entry.setAttribute("aria-current", "page");
+      label.append(entry);
+    } else label.append(document.createTextNode(node.name));
+    if (node.suffix) label.append(document.createTextNode(node.suffix));
+    row.append(label);
+    list.append(row);
+    ancestors.push(row);
+  }
+  branches.append(root);
+  panel.append(branches);
+  return panel;
 }
 
 async function weaponPage(id, index, version) {
@@ -384,9 +421,19 @@ async function weaponPage(id, index, version) {
     if (version !== routeVersion) return;
     details.replaceChildren();
     if (!data[id]) throw new Error(`Missing weapon detail ${id}`);
-    for (const table of data[id].tables) weaponTable(details, table, id, index);
+    const layout = element("div", "weapon-detail-layout");
+    const sources = element("div");
+    for (const table of data[id].tables) weaponTable(sources, table, id, index);
+    layout.append(sources);
+    details.append(layout);
+    weaponTreesPromise ||= loadData("weapon-trees").catch(error => {
+      weaponTreesPromise = null;
+      throw error;
+    });
+    const tree = weaponTree(id, await weaponTreesPromise);
+    if (version === routeVersion && tree) layout.append(tree);
   } catch (error) {
-    if (version === routeVersion) details.textContent = "Weapon details could not be loaded. Please try again.";
+    if (version === routeVersion && !details.querySelector(".weapon-detail-layout")) details.textContent = "Weapon details could not be loaded. Please try again.";
     console.error(error);
   }
 }

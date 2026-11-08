@@ -41,6 +41,10 @@ function link(label, href, className) {
   return node;
 }
 
+function originalPage(folder, file) {
+  return `https://xl3lackout.github.io/MHFZ-Ferias-English-Project/${folder}/${file}`;
+}
+
 function sectionIcon(number) {
   const img = element("img", "section-icon");
   img.src = `../assets/mhficons/tile${number}.png`;
@@ -344,7 +348,7 @@ async function detailPage(id) {
   panel.append(facts);
   panel.append(element("p", "hint", "Combination recipes and other special uses have not yet been migrated."));
   const actions = element("div", "actions");
-  actions.append(link("View remaining original item details ↗", `../archive/ferias/sozai/sozai.htm?${id}`));
+  actions.append(link("View remaining original item details ↗", originalPage("sozai", `sozai.htm?${id}`)));
   panel.append(actions);
   content.append(panel, element("h2", "section-head", "Where to find it"));
   const sources = element("div", "", "Loading sources…");

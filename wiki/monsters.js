@@ -2,9 +2,18 @@
 
 const monsterVariantOrder = ["n", "nh", "ng", "ni", "nt"];
 let monstersPromise;
+const monsterDetailPromises = new Map();
 
 function monsterData() {
   return monstersPromise ||= loadData("monsters");
+}
+
+function monsterDetails(id) {
+  if (!monsterDetailPromises.has(id)) monsterDetailPromises.set(id, loadData(`monster-details/${id}`).catch(error => {
+    monsterDetailPromises.delete(id);
+    throw error;
+  }));
+  return monsterDetailPromises.get(id);
 }
 
 function monsterPage(current) {
@@ -111,7 +120,7 @@ function monsterSection(title, node) {
 function monsterImagePath(path, description) {
   if (!/^mons(?:icons|zones)\/[\w.-]+\.(?:png|webp|gif)$/i.test(path)) return null;
   const image = element("img", "monster-art");
-  image.src = `../archive/ferias/img/${path}`;
+  image.src = `../assets/${path}`;
   image.alt = description;
   image.loading = "lazy";
   image.addEventListener("error", () => image.remove());
@@ -224,8 +233,8 @@ async function monsterDetail(current, data, version) {
     content.append(tabs);
   }
   const actions = element("p", "actions");
-  if (variant) actions.append(link("Original stat page ↗", `../archive/ferias/mons/${pages[variant]}`));
-  if (pages.h) actions.append(link("Original carves ↗", `../archive/ferias/mons/${pages.h}`));
+  if (variant) actions.append(link("Original stat page ↗", originalPage("mons", pages[variant])));
+  if (pages.h) actions.append(link("Original carves ↗", originalPage("mons", pages.h)));
   content.append(actions);
   const stats = element("div", "", "Loading monster stats…");
   if (variant) content.append(stats);
@@ -233,17 +242,17 @@ async function monsterDetail(current, data, version) {
     const drops = element("div", "", "Loading carves and drops…");
     content.append(element("h2", "section-head", "Carves & drops"),
       element("p", "hint", "These are reward-table ranks from Ferias, not stat variants. For example, Henshu stats and Elite drops are different categories."), drops);
-    oldPage("mons", pages.h).then(doc => {
-      if (version === routeVersion) showMonsterDrops(doc, drops, rank, selectedRank => monsterUrl(slug, variant, selectedRank), data.dropRanks?.[id]);
+    monsterDetails(id).then(records => {
+      if (version === routeVersion) showMonsterDrops(new DOMParser().parseFromString(records[pages.h] || "", "text/html"), drops, rank, selectedRank => monsterUrl(slug, variant, selectedRank), data.dropRanks?.[id]);
     }).catch(error => {
       if (version === routeVersion) drops.textContent = "Carve data could not be loaded; see the original page above.";
       console.error(error);
     });
   }
-  if (variant) oldPage("mons", pages[variant]).then(doc => {
+  if (variant) monsterDetails(id).then(records => {
     const images = data.images?.[id];
     const fallback = Object.values(images || {}).find(entry => entry.icon)?.icon;
-    if (version === routeVersion) showMonsterStats(doc, stats, heading, images?.[variant], fallback, data.statLabels?.[id]?.[variant] || "Selected");
+    if (version === routeVersion) showMonsterStats(new DOMParser().parseFromString(records[pages[variant]] || "", "text/html"), stats, heading, images?.[variant], fallback, data.statLabels?.[id]?.[variant] || "Selected");
   }).catch(error => {
     if (version === routeVersion) stats.textContent = "Stats could not be loaded; see the original page above.";
     console.error(error);
