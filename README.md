@@ -12,4 +12,4 @@ The new wiki lives in `wiki/`. Run `node wiki/dev-server.js` and visit `http://l
 
 See `data/README.md` for dataset coverage and IDs. To regenerate JSON and referenced images after editing source data, run `node scripts/build-data.js`, then `node scripts/check-data.js`. Do not edit generated JSON by hand.
 
-For GitHub Pages, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. The workflow in `.github/workflows/pages.yml` validates generated data and deploys only `index.html`, `wiki/`, `data/`, and `assets/` on pushes to `main` (or manually from the Actions tab). The archive remains in Git as build-time source material but is not published; original-page links go to the upstream Ferias project.
+For GitHub Pages, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. The workflow in `.github/workflows/pages.yml` validates generated data and deploys `index.html`, `wiki/`, `assets/`, and runtime JSON from `data/` on pushes to `main` (or manually from the Actions tab). Build-only JSON and the archive remain in Git for regeneration but are not published; original-page links go to the upstream Ferias project.

@@ -26,9 +26,16 @@ jobs:
         run: node scripts/check-data.js
       - name: Prepare static site
         run: |
-          mkdir -p _site
+          mkdir -p _site/data
           cp index.html _site/
-          cp -R wiki data assets _site/
+          cp -R wiki assets _site/
+          rsync -a \
+            --exclude='/README.md' \
+            --exclude='/equipment.json' \
+            --exclude='/weapon-pages.json' \
+            --exclude='/item-extras.json' \
+            --exclude='/weapon-details/index.json' \
+            data/ _site/data/
           touch _site/.nojekyll
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -40,6 +47,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     permissions:
       contents: read
       pages: write
@@ -51,3 +59,5 @@ jobs:
       - name: Deploy site
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          timeout: '1800000'
