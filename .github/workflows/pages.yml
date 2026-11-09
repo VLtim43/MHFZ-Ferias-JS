@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      minimal_site:
+        description: Deploy a tiny test page instead of the wiki
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -23,8 +28,10 @@ jobs:
         with:
           node-version: '24'
       - name: Validate generated data
+        if: ${{ !inputs.minimal_site }}
         run: node scripts/check-data.js
       - name: Prepare static site
+        if: ${{ !inputs.minimal_site }}
         run: |
           mkdir -p _site/data
           cp index.html _site/
@@ -36,6 +43,12 @@ jobs:
             --exclude='/item-extras.json' \
             --exclude='/weapon-details/index.json' \
             data/ _site/data/
+          touch _site/.nojekyll
+      - name: Prepare minimal test site
+        if: ${{ inputs.minimal_site }}
+        run: |
+          mkdir -p _site
+          printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><title>Pages test</title><h1>GitHub Pages deployment works</h1></html>' > _site/index.html
           touch _site/.nojekyll
       - name: Configure Pages
         uses: actions/configure-pages@v5
