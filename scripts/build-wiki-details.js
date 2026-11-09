@@ -6,6 +6,7 @@ const root = path.resolve(__dirname, "..");
 const archive = path.join(root, "archive/ferias");
 const data = path.join(root, "data");
 const monsters = JSON.parse(fs.readFileSync(path.join(data, "monsters.json"), "utf8"));
+const excludedMonsters = require("./monster-art.json").exclude;
 const quests = JSON.parse(fs.readFileSync(path.join(data, "quests.json"), "utf8"));
 
 function write(folder, file, value) {
@@ -45,6 +46,7 @@ for (const file of questFiles) {
   write("quest-details", file, entries);
 }
 
+for (const id of excludedMonsters) fs.rmSync(path.join(data, "monster-details", `${id}.json`), { force: true });
 for (const [id, pages] of Object.entries(monsters.pages)) {
   const records = {};
   for (const file of new Set(Object.values(pages))) {

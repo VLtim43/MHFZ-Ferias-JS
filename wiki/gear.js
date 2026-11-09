@@ -119,17 +119,17 @@ function gearListPage(current, index) {
   update();
 }
 
-function gearValue(cell, index) {
+function gearValue(cell, index, decorate = false) {
   const result = document.createDocumentFragment();
   if (!cell) return result;
   if (!cell.parts) {
-    result.append(document.createTextNode(cell.text || ""));
+    result.append(decorate ? effectText(cell.text || "") : document.createTextNode(cell.text || ""));
     return result;
   }
   for (const part of cell.parts) {
     if (part.itemId && items[part.itemId]) result.append(link(part.text, `#/items/${part.itemId}`));
     else if (part.gearId && index[part.gearId]) result.append(link(part.text, `#/${armorTypes.has(part.gearId[0]) ? "armor" : "decorations"}/${part.gearId}`));
-    else result.append(document.createTextNode(part.text));
+    else result.append(decorate ? effectText(part.text) : document.createTextNode(part.text));
   }
   return result;
 }
@@ -194,8 +194,9 @@ function gearDetailPage(current, index, version) {
         if (!selected?.text && !selected?.parts && !cell.lines) continue;
         const row = element("div", "detail-field gear-stat");
         const value = element("dd");
-        if (selected?.lines) for (const line of selected.lines) value.append(gearValue(line, index), document.createElement("br"));
-        else value.append(gearValue(selected, index));
+        const decorate = /^(?:Resistance|Element|Attributes|Skills)$/i.test(record.columns[i]);
+        if (selected?.lines) for (const line of selected.lines) value.append(gearValue(line, index, decorate), document.createElement("br"));
+        else value.append(gearValue(selected, index, decorate));
         row.append(element("dt", "", record.columns[i].replace("DefenseSlot", "Defense / slots").replace("TypeﾟGR", "Type / GR")), value);
         fields.append(row);
       }

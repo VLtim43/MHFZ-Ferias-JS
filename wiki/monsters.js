@@ -48,7 +48,7 @@ function monsterList(current, data) {
     results.replaceChildren();
     for (const [id, name] of matches) {
       const card = link("", `#/monsters/${data.slugs?.[id] || id}`, "result monster-card");
-      const icon = monsterIcon(name);
+      const icon = monsterIcon(name, data.art?.[id]?.icon);
       if (icon) card.append(icon);
       const text = element("span", "", name);
       text.append(element("small", "", monsterVariantOrder.filter(key => data.pages[id][key]).map(key => data.statLabels?.[id]?.[key] || key).join(" · ") || "Carves"));
@@ -102,7 +102,11 @@ function monsterTable(source) {
       const target = element(cell.tagName.toLowerCase());
       target.colSpan = cell.colSpan;
       target.rowSpan = cell.rowSpan;
-      target.append(monsterMarkup(cell));
+      const label = cell.textContent.trim();
+      if (source.id === "niku" || source.id === "izyo") {
+        if (cell.tagName === "TH" && /^(?:Fire|Water|Thndr|Thunder|Dragon|Ice|Stun|Poison|Paralysis|Sleep)$/i.test(label)) target.append(effectText(label));
+        else target.append(monsterMarkup(cell));
+      } else target.append(monsterMarkup(cell));
       row.append(target);
     }
     table.append(row);
@@ -118,7 +122,7 @@ function monsterSection(title, node) {
 }
 
 function monsterImagePath(path, description) {
-  if (!/^mons(?:icons|zones)\/[\w.-]+\.(?:png|webp|gif)$/i.test(path)) return null;
+  if (!/^(?:mons(?:icons|zones)|monster-art)\/[\w.-]+\.(?:png|webp|gif)$/i.test(path)) return null;
   const image = element("img", "monster-art");
   image.src = `../assets/${path}`;
   image.alt = description;
@@ -127,10 +131,10 @@ function monsterImagePath(path, description) {
   return image;
 }
 
-function showMonsterStats(doc, target, heading, images, fallback, variantLabel) {
+function showMonsterStats(doc, target, heading, images, artworkPath, variantLabel) {
   target.replaceChildren();
   heading.querySelector(".monster-art")?.remove();
-  const artwork = (images?.icon || fallback) && monsterImagePath(images?.icon || fallback, `${heading.querySelector("h1").textContent} illustration`);
+  const artwork = artworkPath && monsterImagePath(artworkPath, `${heading.querySelector("h1").textContent} render`);
   if (artwork) {
     artwork.classList.add("monster-hero-art");
     heading.prepend(artwork);
@@ -203,7 +207,7 @@ function showMonsterDrops(doc, target, selected, onRank, expectedRanks) {
 }
 
 async function monsterDetail(current, data, version) {
-  const id = Object.keys(data.pages).find(key => data.slugs?.[key] === current.id) || current.id;
+  const id = Object.keys(data.pages).find(key => data.slugs?.[key] === current.id) || data.legacySlugs?.[current.id] || current.id;
   const name = data.names[id];
   const pages = data.pages[id];
   content.replaceChildren(link("← Monsters", "#/monsters", "breadcrumbs"));
@@ -217,7 +221,7 @@ async function monsterDetail(current, data, version) {
     history.replaceState(null, "", monsterUrl(slug, variant, rank));
   }
   const heading = element("div", "monster-heading");
-  const icon = monsterIcon(name);
+  const icon = monsterIcon(name, data.art?.[id]?.icon);
   if (icon) heading.append(icon);
   heading.append(element("h1", "", name));
   content.append(heading, element("p", "muted", `Ferias monster · ${id}`));
@@ -234,6 +238,7 @@ async function monsterDetail(current, data, version) {
   }
   const actions = element("p", "actions");
   if (variant) actions.append(link("Original stat page ↗", originalPage("mons", pages[variant])));
+  if (data.wikiPages?.[id]) actions.append(link("Monster Hunter Wiki ↗", `https://monsterhunter.fandom.com/wiki/${encodeURIComponent(data.wikiPages[id].replaceAll(" ", "_"))}`));
   if (pages.h) actions.append(link("Original carves ↗", originalPage("mons", pages.h)));
   content.append(actions);
   const stats = element("div", "", "Loading monster stats…");
@@ -252,7 +257,7 @@ async function monsterDetail(current, data, version) {
   if (variant) monsterDetails(id).then(records => {
     const images = data.images?.[id];
     const fallback = Object.values(images || {}).find(entry => entry.icon)?.icon;
-    if (version === routeVersion) showMonsterStats(new DOMParser().parseFromString(records[pages[variant]] || "", "text/html"), stats, heading, images?.[variant], fallback, data.statLabels?.[id]?.[variant] || "Selected");
+    if (version === routeVersion) showMonsterStats(new DOMParser().parseFromString(records[pages[variant]] || "", "text/html"), stats, heading, images?.[variant], data.art?.[id]?.render || images?.[variant]?.icon || fallback, data.statLabels?.[id]?.[variant] || "Selected");
   }).catch(error => {
     if (version === routeVersion) stats.textContent = "Stats could not be loaded; see the original page above.";
     console.error(error);

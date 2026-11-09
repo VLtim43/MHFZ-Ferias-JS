@@ -54,8 +54,37 @@ function sectionIcon(number) {
   return img;
 }
 
-function monsterIcon(name) {
+// Decorate only stat fields, not arbitrary item names or prose containing these words.
+const effectNames = { thndr: "thunder", para: "paralysis" };
+const effectPattern = /\b(Fire|Water|Thunder|Thndr|Ice|Dragon|Poison|Paralysis|Para|Sleep|Stun)\b/gi;
+
+function effectText(text) {
+  const result = document.createDocumentFragment();
+  let end = 0;
+  for (const match of text.matchAll(effectPattern)) {
+    result.append(document.createTextNode(text.slice(end, match.index)));
+    const name = effectNames[match[0].toLowerCase()] || match[0].toLowerCase();
+    const img = element("img", "effect-icon");
+    img.src = `../assets/effects/${name}.webp`;
+    img.alt = "";
+    img.loading = "lazy";
+    img.addEventListener("error", () => img.remove());
+    result.append(img, document.createTextNode(match[0]));
+    end = match.index + match[0].length;
+  }
+  result.append(document.createTextNode(text.slice(end)));
+  return result;
+}
+
+function monsterIcon(name, path) {
   const img = element("img", "monster-icon");
+  if (path) {
+    img.src = `../assets/${path}`;
+    img.alt = "";
+    img.loading = "lazy";
+    img.addEventListener("error", () => img.remove());
+    return img;
+  }
   const basename = name.replace(/[^\p{L}\p{N}-]/gu, "");
   if (!basename) return null;
   img.src = `../assets/monsicons/${basename}.webp`;

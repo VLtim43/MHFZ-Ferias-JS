@@ -43,7 +43,8 @@ for (const [id, item] of Object.entries(oldItems)) {
 }
 write("items.json", items);
 
-const monsters = { names: { ...oldMonsters.Name }, pages: {}, images: {}, slugs: {}, dropRanks: {}, statLabels: {}, redirects: {} };
+const monsterArt = require("./monster-art.json");
+const monsters = { names: { ...oldMonsters.Name, ...monsterArt.names }, pages: {}, images: {}, art: {}, wikiPages: {}, slugs: {}, legacySlugs: {}, dropRanks: {}, statLabels: {}, redirects: {} };
 const monsterImageFiles = Object.fromEntries(["monsicons", "monszones"].map(folder => [folder,
   new Map(fs.readdirSync(path.join(root, "archive/ferias/img", folder)).map(filename => [filename.toLowerCase(), filename]))
 ]));
@@ -52,6 +53,7 @@ for (const file of fs.readdirSync(path.join(root, "archive/ferias/mons"))) {
   if (!match || ["mons", "monsF"].includes(match[1])) continue;
   const [ , basename, kind ] = match;
   const id = basename.toLowerCase();
+  if (monsterArt.exclude.includes(id)) continue;
   const html = fs.readFileSync(path.join(root, "archive/ferias/mons", file), "utf8");
   if (kind !== "h" && /<meta\b[^>]*http-equiv=["']?refresh\b/i.test(html)) {
     (monsters.redirects[id] ||= {})[kind] = file;
@@ -65,7 +67,8 @@ for (const file of fs.readdirSync(path.join(root, "archive/ferias/mons"))) {
   if (kind !== "h") {
     const title = /<title\b[^>]*>([^<]+)<\/title>/i.exec(html)?.[1] || "";
     const sourceVariant = [...title.matchAll(/\[([^\]]+)\]/g)].at(-1)?.[1];
-    const prefixedVariant = title.endsWith(monsters.names[id]) ? title.slice(0, -monsters.names[id].length).trim() : "";
+    const sourceName = oldMonsters.Name[id] || monsters.names[id];
+    const prefixedVariant = title.endsWith(sourceName) ? title.slice(0, -sourceName.length).trim() : "";
     (monsters.statLabels[id] ||= {})[kind] = sourceVariant || prefixedVariant || "Normal";
   }
   if (kind === "h") {
@@ -94,6 +97,14 @@ for (const file of fs.readdirSync(path.join(root, "archive/ferias/mons"))) {
     monsters.names[id] = /<div\s+id=["']?monsname["']?[^>]*>([^<]+)/i.exec(html)?.[1] || id;
   }
 }
+for (const id of Object.keys(monsters.pages)) {
+  if (monsterArt.art[id]) monsters.art[id] = { ...monsterArt.art[id] };
+  if (monsterArt.pages[id]) monsters.wikiPages[id] = monsterArt.pages[id];
+}
+for (const [id, base] of Object.entries(monsterArt.iconBases)) {
+  if (!monsters.pages[id] || monsters.art[id]?.icon || !monsters.art[base]?.icon) continue;
+  (monsters.art[id] ||= {}).icon = monsters.art[base].icon;
+}
 const usedMonsterSlugs = new Set();
 const monsterIds = new Set(Object.keys(monsters.pages));
 for (const id of monsterIds) {
@@ -102,6 +113,12 @@ for (const id of monsterIds) {
   const slug = usedMonsterSlugs.has(base) || monsterIds.has(base) && base !== id ? `${base}-${id}` : base;
   monsters.slugs[id] = slug;
   usedMonsterSlugs.add(slug);
+}
+for (const id of monsterIds) {
+  const oldName = oldMonsters.Name[id];
+  if (!oldName || oldName === monsters.names[id]) continue;
+  const previous = oldName.normalize("NFKD").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  if (previous && !usedMonsterSlugs.has(previous) && !monsterIds.has(previous)) monsters.legacySlugs[previous] = id;
 }
 write("monsters.json", monsters);
 

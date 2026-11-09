@@ -332,7 +332,7 @@ function weaponSharpness(bars) {
   return wrapper;
 }
 
-function weaponCell(value, type, index) {
+function weaponCell(value, type, index, decorate = false) {
   const target = document.createDocumentFragment();
   if (value.parts) {
     let previousQuantity = null;
@@ -349,9 +349,9 @@ function weaponCell(value, type, index) {
         const destination = basename ? Object.entries(weaponFileBases).find(([, base]) => basename === base || basename.startsWith(`${base}_`))?.[0] : type;
         const id = destination && destination + part.weaponId;
         target.append(id && index[id] ? link(text, `#/weapons/${id}`) : document.createTextNode(text));
-      } else target.append(document.createTextNode(text));
+      } else target.append(decorate ? effectText(text) : document.createTextNode(text));
     }
-  } else if (value.text) target.append(document.createTextNode(value.text));
+  } else if (value.text) target.append(decorate ? effectText(value.text) : document.createTextNode(value.text));
   if (value.sharpness) target.append(weaponSharpness(value.sharpness));
   return target;
 }
@@ -360,7 +360,7 @@ function weaponField(parent, label, value, type, index) {
   if (!value || !value.text && !value.parts && !value.sharpness) return;
   const row = element("div", "detail-field");
   const description = element("dd");
-  description.append(weaponCell(value, type, index));
+  description.append(weaponCell(value, type, index, /^(?:Attributes|Element|Status)$/i.test(label)));
   row.append(element("dt", "", label), description);
   parent.append(row);
 }

@@ -1,0 +1,790 @@
+{
+  "names": {
+    "mira": "Fatalis",
+    "raoao": "Ashen Lao-Shan Lung",
+    "hipu": "Hypnocatrice",
+    "hipuao": "Breeding Season Hypnocatrice",
+    "hipusiro": "Silver Hypnocatrice",
+    "vol": "Lavasioth",
+    "volaka": "Lavasioth Subspecies",
+    "lavie": "Laviente",
+    "lavieg": "Berserk Laviente",
+    "bal": "Barlagual",
+    "dio": "Diorekkusu",
+    "boga": "Boggerbadorme",
+    "egura": "Egyurasu",
+    "goglf_l": "Ray Gougarf",
+    "goglf_r": "Lolo Gougarf",
+    "iwa": "Rock",
+    "dokukou": "Poison Lightbug",
+    "dolem1": "Duremudira (Area 1)",
+    "dolem2": "Duremudira (Area 2)",
+    "dolem": "Arrogant Duremudira",
+    "bogak": "Bombardier Boggerbadorme",
+    "joek": "Starving Deviljho",
+    "nalgak": "Blinking Nargacuga",
+    "zeruk": "Sparkling Zerureusu"
+  },
+  "exclude": [
+    "iwa",
+    "lappy",
+    "egura",
+    "dokukou",
+    "koko"
+  ],
+  "iconBases": {
+    "bogak": "boga",
+    "dolem": "dolem1",
+    "joek": "joe",
+    "nalgak": "nalga",
+    "zeruk": "zeru",
+    "miraval": "mira",
+    "volgin": "vol",
+    "volkin": "vol",
+    "yamac": "yama"
+  },
+  "art": {
+    "abio": {
+      "render": "monster-art/abio-render.webp",
+      "icon": "monster-art/abio-icon.webp"
+    },
+    "vau": {
+      "icon": "monster-art/vau-icon.webp",
+      "render": "monster-art/vau-render.webp"
+    },
+    "airu": {
+      "icon": "monster-art/airu-icon.webp",
+      "render": "monster-art/airu-render.webp"
+    },
+    "amatsu": {
+      "render": "monster-art/amatsu-render.webp",
+      "icon": "monster-art/amatsu-icon.webp"
+    },
+    "anolu": {
+      "icon": "monster-art/anolu-icon.webp",
+      "render": "monster-art/anolu-render.webp"
+    },
+    "akamu": {
+      "render": "monster-art/akamu-render.webp",
+      "icon": "monster-art/akamu-icon.webp"
+    },
+    "apono": {
+      "icon": "monster-art/apono-icon.webp",
+      "render": "monster-art/apono-render.webp"
+    },
+    "apuke": {
+      "icon": "monster-art/apuke-icon.webp",
+      "render": "monster-art/apuke-render.webp"
+    },
+    "aqura": {
+      "render": "monster-art/aqura-render.webp",
+      "icon": "monster-art/aqura-icon.webp"
+    },
+    "babakonga": {
+      "render": "monster-art/babakonga-render.webp",
+      "icon": "monster-art/babakonga-icon.webp"
+    },
+    "aquraj": {
+      "icon": "monster-art/aquraj-icon.webp",
+      "render": "monster-art/aquraj-render.webp"
+    },
+    "bal": {
+      "icon": "monster-art/bal-icon.webp",
+      "render": "monster-art/bal-render.webp"
+    },
+    "basa": {
+      "icon": "monster-art/basa-icon.webp",
+      "render": "monster-art/basa-render.webp"
+    },
+    "berio": {
+      "icon": "monster-art/berio-icon.webp",
+      "render": "monster-art/berio-render.webp"
+    },
+    "beru": {
+      "icon": "monster-art/beru-icon.webp",
+      "render": "monster-art/beru-render.webp"
+    },
+    "bogak": {
+      "render": "monster-art/bogak-render.webp"
+    },
+    "brook": {
+      "render": "monster-art/brook-render.webp",
+      "icon": "monster-art/brook-icon.webp"
+    },
+    "boga": {
+      "render": "monster-art/boga-render.webp",
+      "icon": "monster-art/boga-icon.webp"
+    },
+    "buraki": {
+      "icon": "monster-art/buraki-icon.webp",
+      "render": "monster-art/buraki-render.webp"
+    },
+    "buru": {
+      "icon": "monster-art/buru-icon.webp",
+      "render": "monster-art/buru-render.webp"
+    },
+    "bura": {
+      "icon": "monster-art/bura-icon.webp"
+    },
+    "cyacyaking": {
+      "render": "monster-art/cyacyaking-render.webp",
+      "icon": "monster-art/cyacyaking-icon.webp"
+    },
+    "cyacya": {
+      "render": "monster-art/cyacya-render.webp",
+      "icon": "monster-art/cyacya-icon.webp"
+    },
+    "daimyo": {
+      "render": "monster-art/daimyo-render.webp",
+      "icon": "monster-art/daimyo-icon.webp"
+    },
+    "dea": {
+      "icon": "monster-art/dea-icon.webp",
+      "render": "monster-art/dea-render.webp"
+    },
+    "deakuro": {
+      "icon": "monster-art/deakuro-icon.webp",
+      "render": "monster-art/deakuro-render.webp"
+    },
+    "dio": {
+      "render": "monster-art/dio-render.webp",
+      "icon": "monster-art/dio-icon.webp"
+    },
+    "dodobura": {
+      "icon": "monster-art/dodobura-icon.webp",
+      "render": "monster-art/dodobura-render.webp"
+    },
+    "dolem2": {
+      "render": "monster-art/dolem2-render.webp",
+      "icon": "monster-art/dolem2-icon.webp"
+    },
+    "dolem1": {
+      "render": "monster-art/dolem1-render.webp",
+      "icon": "monster-art/dolem1-icon.webp"
+    },
+    "dolem": {
+      "render": "monster-art/dolem-render.webp"
+    },
+    "dosburu": {
+      "render": "monster-art/dosburu-render.webp",
+      "icon": "monster-art/dosburu-icon.webp"
+    },
+    "doragyu": {
+      "render": "monster-art/doragyu-render.webp",
+      "icon": "monster-art/doragyu-icon.webp"
+    },
+    "dosgare": {
+      "icon": "monster-art/dosgare-icon.webp",
+      "render": "monster-art/dosgare-render.webp"
+    },
+    "dosgene": {
+      "render": "monster-art/dosgene-render.webp",
+      "icon": "monster-art/dosgene-icon.webp"
+    },
+    "dosios": {
+      "icon": "monster-art/dosios-icon.webp",
+      "render": "monster-art/dosios-render.webp"
+    },
+    "dosran": {
+      "render": "monster-art/dosran-render.webp",
+      "icon": "monster-art/dosran-icon.webp"
+    },
+    "dura": {
+      "render": "monster-art/dura-render.webp",
+      "icon": "monster-art/dura-icon.webp"
+    },
+    "elze": {
+      "render": "monster-art/elze-render.webp",
+      "icon": "monster-art/elze-icon.webp"
+    },
+    "erupe": {
+      "render": "monster-art/erupe-render.webp",
+      "icon": "monster-art/erupe-icon.webp"
+    },
+    "esp": {
+      "icon": "monster-art/esp-icon.webp",
+      "render": "monster-art/esp-render.webp"
+    },
+    "espsiro": {
+      "render": "monster-art/espsiro-render.webp",
+      "icon": "monster-art/espsiro-icon.webp"
+    },
+    "faru": {
+      "icon": "monster-art/faru-icon.webp",
+      "render": "monster-art/faru-render.webp"
+    },
+    "folo": {
+      "render": "monster-art/folo-render.webp",
+      "icon": "monster-art/folo-icon.webp"
+    },
+    "furu": {
+      "icon": "monster-art/furu-icon.webp",
+      "render": "monster-art/furu-render.webp"
+    },
+    "furuaka": {
+      "render": "monster-art/furuaka-render.webp",
+      "icon": "monster-art/furuaka-icon.webp"
+    },
+    "gabu": {
+      "icon": "monster-art/gabu-icon.webp",
+      "render": "monster-art/gabu-render.webp"
+    },
+    "galba": {
+      "icon": "monster-art/galba-icon.webp",
+      "render": "monster-art/galba-render.webp"
+    },
+    "gami": {
+      "render": "monster-art/gami-render.webp",
+      "icon": "monster-art/gami-icon.webp"
+    },
+    "gano": {
+      "icon": "monster-art/gano-icon.webp",
+      "render": "monster-art/gano-render.webp"
+    },
+    "ganomidori": {
+      "render": "monster-art/ganomidori-render.webp",
+      "icon": "monster-art/ganomidori-icon.webp"
+    },
+    "gare": {
+      "icon": "monster-art/gare-icon.webp",
+      "render": "monster-art/gare-render.webp"
+    },
+    "garuru": {
+      "icon": "monster-art/garuru-icon.webp",
+      "render": "monster-art/garuru-render.webp"
+    },
+    "gasra": {
+      "render": "monster-art/gasra-render.webp",
+      "icon": "monster-art/gasra-icon.webp"
+    },
+    "gau": {
+      "render": "monster-art/gau-render.webp",
+      "icon": "monster-art/gau-icon.webp"
+    },
+    "gene": {
+      "render": "monster-art/gene-render.webp",
+      "icon": "monster-art/gene-icon.webp"
+    },
+    "geryo": {
+      "icon": "monster-art/geryo-icon.webp",
+      "render": "monster-art/geryo-render.webp"
+    },
+    "geryoao": {
+      "icon": "monster-art/geryoao-icon.webp",
+      "render": "monster-art/geryoao-render.webp"
+    },
+    "giano": {
+      "render": "monster-art/giano-render.webp",
+      "icon": "monster-art/giano-icon.webp"
+    },
+    "giao": {
+      "render": "monster-art/giao-render.webp",
+      "icon": "monster-art/giao-icon.webp"
+    },
+    "goa": {
+      "render": "monster-art/goa-render.webp",
+      "icon": "monster-art/goa-icon.webp"
+    },
+    "glare": {
+      "icon": "monster-art/glare-icon.webp",
+      "render": "monster-art/glare-render.webp"
+    },
+    "gogo": {
+      "render": "monster-art/gogo-render.webp",
+      "icon": "monster-art/gogo-icon.webp"
+    },
+    "guan": {
+      "icon": "monster-art/guan-icon.webp",
+      "render": "monster-art/guan-render.webp"
+    },
+    "gura": {
+      "icon": "monster-art/gura-icon.webp",
+      "render": "monster-art/gura-render.webp"
+    },
+    "gurakuro": {
+      "icon": "monster-art/gurakuro-icon.webp",
+      "render": "monster-art/gurakuro-render.webp"
+    },
+    "guren": {
+      "render": "monster-art/guren-render.webp",
+      "icon": "monster-art/guren-icon.webp"
+    },
+    "hald": {
+      "icon": "monster-art/hald-icon.webp",
+      "render": "monster-art/hald-render.webp"
+    },
+    "hipu": {
+      "icon": "monster-art/hipu-icon.webp",
+      "render": "monster-art/hipu-render.webp"
+    },
+    "hipuao": {
+      "render": "monster-art/hipuao-render.webp",
+      "icon": "monster-art/hipuao-icon.webp"
+    },
+    "hipusiro": {
+      "render": "monster-art/hipusiro-render.webp",
+      "icon": "monster-art/hipusiro-icon.webp"
+    },
+    "hyuji": {
+      "render": "monster-art/hyuji-render.webp",
+      "icon": "monster-art/hyuji-icon.webp"
+    },
+    "ina": {
+      "icon": "monster-art/ina-icon.webp",
+      "render": "monster-art/ina-render.webp"
+    },
+    "ios": {
+      "icon": "monster-art/ios-icon.webp",
+      "render": "monster-art/ios-render.webp"
+    },
+    "joe": {
+      "icon": "monster-art/joe-icon.webp",
+      "render": "monster-art/joe-render.webp"
+    },
+    "kanta": {
+      "icon": "monster-art/kanta-icon.webp",
+      "render": "monster-art/kanta-render.webp"
+    },
+    "joek": {
+      "render": "monster-art/joek-render.webp"
+    },
+    "keoa": {
+      "icon": "monster-art/keoa-icon.webp",
+      "render": "monster-art/keoa-render.webp"
+    },
+    "kerubi": {
+      "render": "monster-art/kerubi-render.webp",
+      "icon": "monster-art/kerubi-icon.webp"
+    },
+    "kirin": {
+      "icon": "monster-art/kirin-icon.webp",
+      "render": "monster-art/kirin-render.webp"
+    },
+    "konga": {
+      "icon": "monster-art/konga-icon.webp"
+    },
+    "kukku": {
+      "icon": "monster-art/kukku-icon.webp",
+      "render": "monster-art/kukku-render.webp"
+    },
+    "kukkuao": {
+      "icon": "monster-art/kukkuao-icon.webp",
+      "render": "monster-art/kukkuao-render.webp"
+    },
+    "kusb": {
+      "render": "monster-art/kusb-render.webp",
+      "icon": "monster-art/kusb-icon.webp"
+    },
+    "kusha": {
+      "render": "monster-art/kusha-render.webp",
+      "icon": "monster-art/kusha-icon.webp"
+    },
+    "kushasabi": {
+      "render": "monster-art/kushasabi-render.webp",
+      "icon": "monster-art/kushasabi-icon.webp"
+    },
+    "lavie": {
+      "icon": "monster-art/lavie-icon.webp",
+      "render": "monster-art/lavie-render.webp"
+    },
+    "lavieg": {
+      "icon": "monster-art/lavieg-icon.webp",
+      "render": "monster-art/lavieg-render.webp"
+    },
+    "levy": {
+      "icon": "monster-art/levy-icon.webp",
+      "render": "monster-art/levy-render.webp"
+    },
+    "mera": {
+      "icon": "monster-art/mera-icon.webp",
+      "render": "monster-art/mera-render.webp"
+    },
+    "merura": {
+      "render": "monster-art/merura-render.webp",
+      "icon": "monster-art/merura-icon.webp"
+    },
+    "mido": {
+      "render": "monster-art/mido-render.webp",
+      "icon": "monster-art/mido-icon.webp"
+    },
+    "miraru": {
+      "render": "monster-art/miraru-render.webp",
+      "icon": "monster-art/miraru-icon.webp"
+    },
+    "mira": {
+      "render": "monster-art/mira-render.webp",
+      "icon": "monster-art/mira-icon.webp"
+    },
+    "miraval": {
+      "render": "monster-art/miraval-render.webp"
+    },
+    "mono": {
+      "render": "monster-art/mono-render.webp",
+      "icon": "monster-art/mono-icon.webp"
+    },
+    "monosiro": {
+      "render": "monster-art/monosiro-render.webp",
+      "icon": "monster-art/monosiro-icon.webp"
+    },
+    "mos": {
+      "render": "monster-art/mos-render.webp",
+      "icon": "monster-art/mos-icon.webp"
+    },
+    "nalga": {
+      "render": "monster-art/nalga-render.webp",
+      "icon": "monster-art/nalga-icon.webp"
+    },
+    "nalgak": {
+      "render": "monster-art/nalgak-render.webp"
+    },
+    "nana": {
+      "render": "monster-art/nana-render.webp",
+      "icon": "monster-art/nana-icon.webp"
+    },
+    "odiva": {
+      "icon": "monster-art/odiva-icon.webp",
+      "render": "monster-art/odiva-render.webp"
+    },
+    "olgk": {
+      "render": "monster-art/olgk-render.webp",
+      "icon": "monster-art/olgk-icon.webp"
+    },
+    "olgn": {
+      "icon": "monster-art/olgn-icon.webp",
+      "render": "monster-art/olgn-render.webp"
+    },
+    "oo": {
+      "icon": "monster-art/oo-icon.webp",
+      "render": "monster-art/oo-render.webp"
+    },
+    "paria": {
+      "icon": "monster-art/paria-icon.webp",
+      "render": "monster-art/paria-render.webp"
+    },
+    "pobol": {
+      "icon": "monster-art/pobol-icon.webp",
+      "render": "monster-art/pobol-render.webp"
+    },
+    "pokara": {
+      "render": "monster-art/pokara-render.webp",
+      "icon": "monster-art/pokara-icon.webp"
+    },
+    "pokaradon": {
+      "icon": "monster-art/pokaradon-icon.webp",
+      "render": "monster-art/pokaradon-render.webp"
+    },
+    "popo": {
+      "render": "monster-art/popo-render.webp",
+      "icon": "monster-art/popo-icon.webp"
+    },
+    "qual": {
+      "render": "monster-art/qual-render.webp",
+      "icon": "monster-art/qual-icon.webp"
+    },
+    "raikou": {
+      "render": "monster-art/raikou-render.webp",
+      "icon": "monster-art/raikou-icon.webp"
+    },
+    "ra": {
+      "icon": "monster-art/ra-icon.webp",
+      "render": "monster-art/ra-render.webp"
+    },
+    "ran": {
+      "render": "monster-art/ran-render.webp",
+      "icon": "monster-art/ran-icon.webp"
+    },
+    "rango": {
+      "render": "monster-art/rango-render.webp",
+      "icon": "monster-art/rango-icon.webp"
+    },
+    "rao": {
+      "icon": "monster-art/rao-icon.webp",
+      "render": "monster-art/rao-render.webp"
+    },
+    "raoao": {
+      "icon": "monster-art/raoao-icon.webp",
+      "render": "monster-art/raoao-render.webp"
+    },
+    "reia": {
+      "render": "monster-art/reia-render.webp",
+      "icon": "monster-art/reia-icon.webp"
+    },
+    "reiasa": {
+      "icon": "monster-art/reiasa-icon.webp",
+      "render": "monster-art/reiasa-render.webp"
+    },
+    "reiakin": {
+      "render": "monster-art/reiakin-render.webp",
+      "icon": "monster-art/reiakin-icon.webp"
+    },
+    "reusu": {
+      "render": "monster-art/reusu-render.webp",
+      "icon": "monster-art/reusu-icon.webp"
+    },
+    "reusugin": {
+      "icon": "monster-art/reusugin-icon.webp",
+      "render": "monster-art/reusugin-render.webp"
+    },
+    "reusuao": {
+      "icon": "monster-art/reusuao-icon.webp",
+      "render": "monster-art/reusuao-render.webp"
+    },
+    "ruco": {
+      "render": "monster-art/ruco-render.webp",
+      "icon": "monster-art/ruco-icon.webp"
+    },
+    "shagal": {
+      "render": "monster-art/shagal-render.webp",
+      "icon": "monster-art/shagal-icon.webp"
+    },
+    "sell": {
+      "render": "monster-art/sell-render.webp",
+      "icon": "monster-art/sell-icon.webp"
+    },
+    "shan": {
+      "render": "monster-art/shan-render.webp",
+      "icon": "monster-art/shan-icon.webp"
+    },
+    "shen": {
+      "render": "monster-art/shen-render.webp",
+      "icon": "monster-art/shen-icon.webp"
+    },
+    "syougun": {
+      "render": "monster-art/syougun-render.webp",
+      "icon": "monster-art/syougun-icon.webp"
+    },
+    "teo": {
+      "render": "monster-art/teo-render.webp",
+      "icon": "monster-art/teo-icon.webp"
+    },
+    "tiga": {
+      "render": "monster-art/tiga-render.webp",
+      "icon": "monster-art/tiga-icon.webp"
+    },
+    "taikun": {
+      "icon": "monster-art/taikun-icon.webp",
+      "render": "monster-art/taikun-render.webp"
+    },
+    "toa": {
+      "icon": "monster-art/toa-icon.webp",
+      "render": "monster-art/toa-render.webp"
+    },
+    "ulky": {
+      "render": "monster-art/ulky-render.webp",
+      "icon": "monster-art/ulky-icon.webp"
+    },
+    "torid": {
+      "icon": "monster-art/torid-icon.webp",
+      "render": "monster-art/torid-render.webp"
+    },
+    "ura": {
+      "render": "monster-art/ura-render.webp",
+      "icon": "monster-art/ura-icon.webp"
+    },
+    "volaka": {
+      "icon": "monster-art/volaka-icon.webp",
+      "render": "monster-art/volaka-render.webp"
+    },
+    "valsa": {
+      "icon": "monster-art/valsa-icon.webp",
+      "render": "monster-art/valsa-render.webp"
+    },
+    "volgin": {
+      "render": "monster-art/volgin-render.webp"
+    },
+    "yama": {
+      "render": "monster-art/yama-render.webp",
+      "icon": "monster-art/yama-icon.webp"
+    },
+    "volkin": {
+      "render": "monster-art/volkin-render.webp"
+    },
+    "vol": {
+      "render": "monster-art/vol-render.webp",
+      "icon": "monster-art/vol-icon.webp"
+    },
+    "yamac": {
+      "render": "monster-art/yamac-render.webp"
+    },
+    "yao": {
+      "render": "monster-art/yao-render.webp",
+      "icon": "monster-art/yao-icon.webp"
+    },
+    "zena": {
+      "icon": "monster-art/zena-icon.webp",
+      "render": "monster-art/zena-render.webp"
+    },
+    "zeruk": {
+      "render": "monster-art/zeruk-render.webp"
+    },
+    "zeru": {
+      "icon": "monster-art/zeru-icon.webp",
+      "render": "monster-art/zeru-render.webp"
+    },
+    "zin": {
+      "render": "monster-art/zin-render.webp",
+      "icon": "monster-art/zin-icon.webp"
+    },
+    "zingoku": {
+      "icon": "monster-art/zingoku-icon.webp",
+      "render": "monster-art/zingoku-render.webp"
+    },
+    "espcya": {
+      "icon": "monster-art/espcya-icon.webp",
+      "render": "monster-art/espcya-render.webp"
+    }
+  },
+  "pages": {
+    "vau": "Voljang",
+    "abio": "Abiorugu",
+    "airu": "Felyne",
+    "akamu": "Akantor",
+    "amatsu": "Amatsu",
+    "anolu": "Anorupatisu",
+    "apono": "Aptonoth",
+    "apuke": "Apceros",
+    "aqura": "Akura Vashimu",
+    "aquraj": "Akura Jebia",
+    "babakonga": "Congalala",
+    "bal": "Barlagual",
+    "basa": "Basarios",
+    "berio": "Barioth",
+    "beru": "Berukyurosu",
+    "bogak": "Bombardier Boggerbadorme",
+    "boga": "Boggerbadorme",
+    "brook": "Burukku",
+    "bura": "Blango",
+    "buraki": "Brachydios",
+    "buru": "Bullfango",
+    "cyacyaking": "King Shakalaka",
+    "cyacya": "Shakalaka",
+    "daimyo": "Daimyo Hermitaur",
+    "dea": "Diablos",
+    "deakuro": "Black Diablos",
+    "dio": "Diorekkusu",
+    "dodobura": "Blangonga",
+    "dolem1": "Duremudira",
+    "dolem2": "Duremudira",
+    "dolem": "Arrogant Duremudira",
+    "doragyu": "Doragyurosu",
+    "dosburu": "Bulldrome",
+    "dosgare": "Cephadrome",
+    "dosgene": "Gendrome",
+    "dosios": "Iodrome",
+    "dosran": "Velocidrome",
+    "dura": "Dyuragaua",
+    "elze": "Elzelion",
+    "erupe": "Erupe",
+    "esp": "Espinas",
+    "espcya": "Flaming Espinas",
+    "espsiro": "Espinas Rare Species",
+    "faru": "Farunokku",
+    "folo": "Forokururu",
+    "furu": "Khezu",
+    "furuaka": "Red Khezu",
+    "gabu": "Remobra",
+    "galba": "Garuba Daora",
+    "gami": "Hermitaur",
+    "gano": "Plesioth",
+    "ganomidori": "Green Plesioth",
+    "gare": "Cephalos",
+    "garuru": "Yian Garuga",
+    "gasra": "Gasurabazura",
+    "gau": "Anteka",
+    "gene": "Genprey",
+    "geryo": "Gypceros",
+    "geryoao": "Purple Gypceros",
+    "giano": "Giaprey",
+    "giao": "Giaorugu",
+    "glare": "Gureadomosu",
+    "goa": "Gore Magala",
+    "gogo": "Gogomoa",
+    "guan": "Guanzorumu",
+    "gura": "Gravios",
+    "gurakuro": "Black Gravios",
+    "guren": "Gurenzeburu",
+    "hald": "Harudomerugu",
+    "hipu": "Hypnocatrice",
+    "hipuao": "Breeding Season Hypnocatrice",
+    "hipusiro": "Silver Hypnocatrice",
+    "hyuji": "Hyujikiki",
+    "ina": "Inagami",
+    "ios": "Ioprey",
+    "joek": "Starving Deviljho",
+    "joe": "Deviljho",
+    "kanta": "Hornetaur",
+    "keoa": "Keoaruboru",
+    "kerubi": "Kelbi",
+    "kirin": "Kirin",
+    "konga": "Conga",
+    "kukku": "Yian Kut-Ku",
+    "kukkuao": "Blue Yian Kut-Ku",
+    "kusb": "Kusubami",
+    "kusha": "Kushala Daora",
+    "kushasabi": "Rusted Kushala Daora",
+    "lavieg": "Berserk Laviente",
+    "lavie": "Laviente",
+    "levy": "Rebidiora",
+    "mera": "Meraginasu",
+    "merura": "Melynx",
+    "mido": "Midogaron",
+    "mira": "Fatalis",
+    "miraru": "White Fatalis",
+    "miraval": "Crimson Fatalis",
+    "mono": "Monoblos",
+    "monosiro": "White Monoblos",
+    "mos": "Mosswine",
+    "nalgak": "Blinking Nargacuga",
+    "nalga": "Nargacuga",
+    "nana": "Lunastra",
+    "odiva": "Odibatorasu",
+    "olgk": "Kamu Orugaron",
+    "olgn": "Nono Orugaron",
+    "oo": "Chameleos",
+    "paria": "Pariapuria",
+    "pobol": "Poborubarumu",
+    "pokara": "Pokara",
+    "pokaradon": "Pokaradon",
+    "popo": "Popo",
+    "qual": "Kuarusepusu",
+    "ra": "Rajang",
+    "raikou": "Great Thunderbug",
+    "ran": "Velociprey",
+    "rango": "Vespoid",
+    "rao": "Lao-Shan Lung",
+    "raoao": "Ashen Lao-Shan Lung",
+    "reia": "Rathian",
+    "reiakin": "Gold Rathian",
+    "reiasa": "Pink Rathian",
+    "reusu": "Rathalos",
+    "reusuao": "Azure Rathalos",
+    "reusugin": "Silver Rathalos",
+    "ruco": "Rukodiora",
+    "sell": "Seregios",
+    "shagal": "Shagaru Magala",
+    "shan": "Shantien",
+    "shen": "Shen Gaoren",
+    "syougun": "Shogun Ceanataur",
+    "taikun": "Taikun Zamuza",
+    "teo": "Teostra",
+    "tiga": "Tigrex",
+    "toa": "Toa Tesukatora",
+    "torid": "Toridcless",
+    "ulky": "Uruki",
+    "ura": "Uragaan",
+    "valsa": "Varusaburosu",
+    "vol": "Lavasioth",
+    "volaka": "Lavasioth Subspecies",
+    "volgin": "Aruganosu",
+    "volkin": "Goruganosu",
+    "yama": "Yama Tsukami",
+    "yamac": "Yama Kurai",
+    "yao": "Ceanataur",
+    "zena": "Zenaserisu",
+    "zeruk": "Sparkling Zerureusu",
+    "zeru": "Zerureusu",
+    "zin": "Zinogre",
+    "zingoku": "Stygian Zinogre",
+    "disf": "Disufiroa"
+  }
+}

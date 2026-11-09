@@ -8,6 +8,19 @@ const read = name => JSON.parse(fs.readFileSync(path.join(root, "data", name + "
 const items = read("items");
 const sources = read("item-sources");
 const monsters = read("monsters");
+const monsterArt = require("./monster-art.json");
+for (const id of monsterArt.exclude) {
+  assert.ok(!monsters.pages[id] && !monsters.art[id] && !monsters.wikiPages[id], `Excluded monster is still listed: ${id}`);
+  assert.ok(!fs.existsSync(path.join(root, "data/monster-details", `${id}.json`)), `Excluded monster still has detail data: ${id}`);
+}
+for (const [id, base] of Object.entries(monsterArt.iconBases)) {
+  assert.equal(monsters.art[id]?.icon, monsters.art[base]?.icon, `Missing base icon for ${id}`);
+}
+for (const name of ["fire", "water", "thunder", "ice", "dragon", "poison", "paralysis", "sleep", "stun"]) {
+  const icon = fs.readFileSync(path.join(root, "assets/effects", `${name}.webp`));
+  assert.equal(icon.toString("ascii", 0, 4), "RIFF", `Invalid ${name} effect icon`);
+  assert.equal(icon.toString("ascii", 8, 12), "WEBP", `Invalid ${name} effect icon`);
+}
 const quests = read("quests");
 const equipment = read("equipment");
 const shops = read("item-shops");
@@ -30,7 +43,23 @@ for (const [id, ranks] of Object.entries(sources)) {
   }
 }
 let redirectCount = 0;
+for (const id of Object.keys(monsters.art || {})) assert.ok(monsters.pages[id], `Art mapped to missing monster: ${id}`);
+for (const [id, title] of Object.entries(monsters.wikiPages || {})) {
+  assert.ok(monsters.pages[id], `Wiki page mapped to missing monster: ${id}`);
+  assert.match(title, /^[\w ()'-]+$/, `Invalid wiki page title: ${id}`);
+}
+for (const [slug, id] of Object.entries(monsters.legacySlugs || {})) {
+  assert.ok(monsters.pages[id], `Old slug points to missing monster: ${slug}`);
+  assert.ok(!Object.values(monsters.slugs).includes(slug), `Old slug conflicts with current slug: ${slug}`);
+}
 for (const [id, pages] of Object.entries(monsters.pages)) {
+  for (const [kind, image] of Object.entries(monsters.art?.[id] || {})) {
+    assert.ok(["icon", "render"].includes(kind), `Unknown monster art type: ${id}/${kind}`);
+    assert.match(image, /^monster-art\/[a-z0-9-]+\.webp$/, `Unsafe monster art path: ${id}/${kind}`);
+    const bytes = fs.readFileSync(path.join(root, "assets", image));
+    assert.equal(bytes.toString("ascii", 0, 4), "RIFF", `Invalid monster art: ${id}/${kind}`);
+    assert.equal(bytes.toString("ascii", 8, 12), "WEBP", `Invalid monster art: ${id}/${kind}`);
+  }
   if (pages.h) {
     assert.deepEqual(new Set(monsters.dropRanks[id]).size, monsters.dropRanks[id].length, `Duplicate drop rank for ${id}`);
     assert.ok(monsters.dropRanks[id].length, `Missing carve ranks for ${id}`);
