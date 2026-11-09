@@ -12,7 +12,7 @@ const folder = path.join(root, "assets/monster-art");
 fs.mkdirSync(folder, { recursive: true });
 
 const aliases = {
-  espsiro: "Espinas Rare Species", espcya: "Flaming Espinas", miraru: "White Fatalis", mira: "Fatalis",
+  espsiro: "Espinas Rare Species", espcya: "Flaming Espinas", miraru: "White Fatalis", mira: "Fatalis", disf: "Vorsphyroa",
   dolem1: "Duremudira", dolem2: "Duremudira", dolem: "Arrogant Duremudira",
   bogak: "Bombardier Boggerbadorme", nalgak: "Blinking Nargacuga",
   zeruk: "Sparkling Zerureusu", joek: "Starving Deviljho",
@@ -28,7 +28,8 @@ const renderOverrides = {
 };
 const iconOverrides = {
   akamu: "MH4U-Akantor_Icon.png", mira: "MHWI-Fatalis_Icon.png", miraru: "MHFU-Question_Mark_Icon.png",
-  boga: "FrontierGen-Bogabadorumu_Icon.png", elze: "FrontierGen-Eruzerion_Icon.png"
+  boga: "FrontierGen-Bogabadorumu_Icon.png", elze: "FrontierGen-Eruzerion_Icon.png",
+  disf: "FrontierGen-Disufiroa_Icon.png"
 };
 const key = value => value.toLowerCase().replace(/[^a-z0-9]/g, "");
 const api = async params => {
@@ -79,10 +80,13 @@ async function main() {
   const missing = included.filter(id => !entries.some(([found]) => found === id));
   console.log(`Matched ${entries.length} monsters; no category match: ${missing.map(id => `${id} (${monsters.names[id]})`).join(", ")}`);
   manifest.pages = Object.fromEntries(entries);
-  for (const id of manifest.exclude) delete manifest.art[id];
+  for (const id of manifest.exclude) {
+    delete manifest.art[id];
+    for (const kind of ["icon", "render"]) fs.rmSync(path.join(folder, `${id}-${kind}.webp`), { force: true });
+  }
   // Disufiroa has a wiki page, but is absent from the category and has no render.
   const disufiroa = await api({ titles: "Disufiroa" });
-  if (Object.values(disufiroa.pages).some(page => page.title === "Disufiroa" && page.missing === undefined)) manifest.pages.disf = "Disufiroa";
+  if (!manifest.pages.disf && Object.values(disufiroa.pages).some(page => page.title === "Disufiroa" && page.missing === undefined)) manifest.pages.disf = "Disufiroa";
 
   const renders = new Map();
   for (const batch of batches([...new Set(entries.map(([, title]) => title))], 40)) {

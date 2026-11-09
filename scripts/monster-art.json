@@ -30,7 +30,36 @@
     "lappy",
     "egura",
     "dokukou",
-    "koko"
+    "koko",
+    "saboten",
+    "kerubi",
+    "mos",
+    "buru",
+    "airu",
+    "apono",
+    "gene",
+    "ran",
+    "rango",
+    "merura",
+    "kanta",
+    "apuke",
+    "ios",
+    "gare",
+    "giano",
+    "raikou",
+    "cyacya",
+    "bura",
+    "konga",
+    "gabu",
+    "yao",
+    "gau",
+    "popo",
+    "gami",
+    "brook",
+    "erupe",
+    "pokara",
+    "ulky",
+    "kusb"
   ],
   "iconBases": {
     "bogak": "boga",
@@ -52,10 +81,6 @@
       "icon": "monster-art/vau-icon.webp",
       "render": "monster-art/vau-render.webp"
     },
-    "airu": {
-      "icon": "monster-art/airu-icon.webp",
-      "render": "monster-art/airu-render.webp"
-    },
     "amatsu": {
       "render": "monster-art/amatsu-render.webp",
       "icon": "monster-art/amatsu-icon.webp"
@@ -67,14 +92,6 @@
     "akamu": {
       "render": "monster-art/akamu-render.webp",
       "icon": "monster-art/akamu-icon.webp"
-    },
-    "apono": {
-      "icon": "monster-art/apono-icon.webp",
-      "render": "monster-art/apono-render.webp"
-    },
-    "apuke": {
-      "icon": "monster-art/apuke-icon.webp",
-      "render": "monster-art/apuke-render.webp"
     },
     "aqura": {
       "render": "monster-art/aqura-render.webp",
@@ -107,10 +124,6 @@
     "bogak": {
       "render": "monster-art/bogak-render.webp"
     },
-    "brook": {
-      "render": "monster-art/brook-render.webp",
-      "icon": "monster-art/brook-icon.webp"
-    },
     "boga": {
       "render": "monster-art/boga-render.webp",
       "icon": "monster-art/boga-icon.webp"
@@ -119,20 +132,9 @@
       "icon": "monster-art/buraki-icon.webp",
       "render": "monster-art/buraki-render.webp"
     },
-    "buru": {
-      "icon": "monster-art/buru-icon.webp",
-      "render": "monster-art/buru-render.webp"
-    },
-    "bura": {
-      "icon": "monster-art/bura-icon.webp"
-    },
     "cyacyaking": {
       "render": "monster-art/cyacyaking-render.webp",
       "icon": "monster-art/cyacyaking-icon.webp"
-    },
-    "cyacya": {
-      "render": "monster-art/cyacya-render.webp",
-      "icon": "monster-art/cyacya-icon.webp"
     },
     "daimyo": {
       "render": "monster-art/daimyo-render.webp",
@@ -197,10 +199,6 @@
       "render": "monster-art/elze-render.webp",
       "icon": "monster-art/elze-icon.webp"
     },
-    "erupe": {
-      "render": "monster-art/erupe-render.webp",
-      "icon": "monster-art/erupe-icon.webp"
-    },
     "esp": {
       "icon": "monster-art/esp-icon.webp",
       "render": "monster-art/esp-render.webp"
@@ -225,17 +223,9 @@
       "render": "monster-art/furuaka-render.webp",
       "icon": "monster-art/furuaka-icon.webp"
     },
-    "gabu": {
-      "icon": "monster-art/gabu-icon.webp",
-      "render": "monster-art/gabu-render.webp"
-    },
     "galba": {
       "icon": "monster-art/galba-icon.webp",
       "render": "monster-art/galba-render.webp"
-    },
-    "gami": {
-      "render": "monster-art/gami-render.webp",
-      "icon": "monster-art/gami-icon.webp"
     },
     "gano": {
       "icon": "monster-art/gano-icon.webp",
@@ -245,10 +235,6 @@
       "render": "monster-art/ganomidori-render.webp",
       "icon": "monster-art/ganomidori-icon.webp"
     },
-    "gare": {
-      "icon": "monster-art/gare-icon.webp",
-      "render": "monster-art/gare-render.webp"
-    },
     "garuru": {
       "icon": "monster-art/garuru-icon.webp",
       "render": "monster-art/garuru-render.webp"
@@ -257,14 +243,6 @@
       "render": "monster-art/gasra-render.webp",
       "icon": "monster-art/gasra-icon.webp"
     },
-    "gau": {
-      "render": "monster-art/gau-render.webp",
-      "icon": "monster-art/gau-icon.webp"
-    },
-    "gene": {
-      "render": "monster-art/gene-render.webp",
-      "icon": "monster-art/gene-icon.webp"
-    },
     "geryo": {
       "icon": "monster-art/geryo-icon.webp",
       "render": "monster-art/geryo-render.webp"
@@ -272,10 +250,6 @@
     "geryoao": {
       "icon": "monster-art/geryoao-icon.webp",
       "render": "monster-art/geryoao-render.webp"
-    },
-    "giano": {
-      "render": "monster-art/giano-render.webp",
-      "icon": "monster-art/giano-icon.webp"
     },
     "giao": {
       "render": "monster-art/giao-render.webp",
@@ -333,17 +307,9 @@
       "icon": "monster-art/ina-icon.webp",
       "render": "monster-art/ina-render.webp"
     },
-    "ios": {
-      "icon": "monster-art/ios-icon.webp",
-      "render": "monster-art/ios-render.webp"
-    },
     "joe": {
       "icon": "monster-art/joe-icon.webp",
       "render": "monster-art/joe-render.webp"
-    },
-    "kanta": {
-      "icon": "monster-art/kanta-icon.webp",
-      "render": "monster-art/kanta-render.webp"
     },
     "joek": {
       "render": "monster-art/joek-render.webp"
@@ -352,16 +318,9 @@
       "icon": "monster-art/keoa-icon.webp",
       "render": "monster-art/keoa-render.webp"
     },
-    "kerubi": {
-      "render": "monster-art/kerubi-render.webp",
-      "icon": "monster-art/kerubi-icon.webp"
-    },
     "kirin": {
       "icon": "monster-art/kirin-icon.webp",
       "render": "monster-art/kirin-render.webp"
-    },
-    "konga": {
-      "icon": "monster-art/konga-icon.webp"
     },
     "kukku": {
       "icon": "monster-art/kukku-icon.webp",
@@ -370,10 +329,6 @@
     "kukkuao": {
       "icon": "monster-art/kukkuao-icon.webp",
       "render": "monster-art/kukkuao-render.webp"
-    },
-    "kusb": {
-      "render": "monster-art/kusb-render.webp",
-      "icon": "monster-art/kusb-icon.webp"
     },
     "kusha": {
       "render": "monster-art/kusha-render.webp",
@@ -399,10 +354,6 @@
       "icon": "monster-art/mera-icon.webp",
       "render": "monster-art/mera-render.webp"
     },
-    "merura": {
-      "render": "monster-art/merura-render.webp",
-      "icon": "monster-art/merura-icon.webp"
-    },
     "mido": {
       "render": "monster-art/mido-render.webp",
       "icon": "monster-art/mido-icon.webp"
@@ -425,10 +376,6 @@
     "monosiro": {
       "render": "monster-art/monosiro-render.webp",
       "icon": "monster-art/monosiro-icon.webp"
-    },
-    "mos": {
-      "render": "monster-art/mos-render.webp",
-      "icon": "monster-art/mos-icon.webp"
     },
     "nalga": {
       "render": "monster-art/nalga-render.webp",
@@ -465,37 +412,17 @@
       "icon": "monster-art/pobol-icon.webp",
       "render": "monster-art/pobol-render.webp"
     },
-    "pokara": {
-      "render": "monster-art/pokara-render.webp",
-      "icon": "monster-art/pokara-icon.webp"
-    },
     "pokaradon": {
       "icon": "monster-art/pokaradon-icon.webp",
       "render": "monster-art/pokaradon-render.webp"
-    },
-    "popo": {
-      "render": "monster-art/popo-render.webp",
-      "icon": "monster-art/popo-icon.webp"
     },
     "qual": {
       "render": "monster-art/qual-render.webp",
       "icon": "monster-art/qual-icon.webp"
     },
-    "raikou": {
-      "render": "monster-art/raikou-render.webp",
-      "icon": "monster-art/raikou-icon.webp"
-    },
     "ra": {
       "icon": "monster-art/ra-icon.webp",
       "render": "monster-art/ra-render.webp"
-    },
-    "ran": {
-      "render": "monster-art/ran-render.webp",
-      "icon": "monster-art/ran-icon.webp"
-    },
-    "rango": {
-      "render": "monster-art/rango-render.webp",
-      "icon": "monster-art/rango-icon.webp"
     },
     "rao": {
       "icon": "monster-art/rao-icon.webp",
@@ -569,10 +496,6 @@
       "icon": "monster-art/toa-icon.webp",
       "render": "monster-art/toa-render.webp"
     },
-    "ulky": {
-      "render": "monster-art/ulky-render.webp",
-      "icon": "monster-art/ulky-icon.webp"
-    },
     "torid": {
       "icon": "monster-art/torid-icon.webp",
       "render": "monster-art/torid-render.webp"
@@ -606,10 +529,6 @@
     "yamac": {
       "render": "monster-art/yamac-render.webp"
     },
-    "yao": {
-      "render": "monster-art/yao-render.webp",
-      "icon": "monster-art/yao-icon.webp"
-    },
     "zena": {
       "icon": "monster-art/zena-icon.webp",
       "render": "monster-art/zena-render.webp"
@@ -632,17 +551,18 @@
     "espcya": {
       "icon": "monster-art/espcya-icon.webp",
       "render": "monster-art/espcya-render.webp"
+    },
+    "disf": {
+      "icon": "monster-art/disf-icon.webp",
+      "render": "monster-art/disf-render.webp"
     }
   },
   "pages": {
     "vau": "Voljang",
     "abio": "Abiorugu",
-    "airu": "Felyne",
     "akamu": "Akantor",
     "amatsu": "Amatsu",
     "anolu": "Anorupatisu",
-    "apono": "Aptonoth",
-    "apuke": "Apceros",
     "aqura": "Akura Vashimu",
     "aquraj": "Akura Jebia",
     "babakonga": "Congalala",
@@ -652,16 +572,13 @@
     "beru": "Berukyurosu",
     "bogak": "Bombardier Boggerbadorme",
     "boga": "Boggerbadorme",
-    "brook": "Burukku",
-    "bura": "Blango",
     "buraki": "Brachydios",
-    "buru": "Bullfango",
     "cyacyaking": "King Shakalaka",
-    "cyacya": "Shakalaka",
     "daimyo": "Daimyo Hermitaur",
     "dea": "Diablos",
     "deakuro": "Black Diablos",
     "dio": "Diorekkusu",
+    "disf": "Vorsphyroa",
     "dodobura": "Blangonga",
     "dolem1": "Duremudira",
     "dolem2": "Duremudira",
@@ -674,7 +591,6 @@
     "dosran": "Velocidrome",
     "dura": "Dyuragaua",
     "elze": "Elzelion",
-    "erupe": "Erupe",
     "esp": "Espinas",
     "espcya": "Flaming Espinas",
     "espsiro": "Espinas Rare Species",
@@ -682,19 +598,13 @@
     "folo": "Forokururu",
     "furu": "Khezu",
     "furuaka": "Red Khezu",
-    "gabu": "Remobra",
     "galba": "Garuba Daora",
-    "gami": "Hermitaur",
     "gano": "Plesioth",
     "ganomidori": "Green Plesioth",
-    "gare": "Cephalos",
     "garuru": "Yian Garuga",
     "gasra": "Gasurabazura",
-    "gau": "Anteka",
-    "gene": "Genprey",
     "geryo": "Gypceros",
     "geryoao": "Purple Gypceros",
-    "giano": "Giaprey",
     "giao": "Giaorugu",
     "glare": "Gureadomosu",
     "goa": "Gore Magala",
@@ -709,31 +619,24 @@
     "hipusiro": "Silver Hypnocatrice",
     "hyuji": "Hyujikiki",
     "ina": "Inagami",
-    "ios": "Ioprey",
     "joek": "Starving Deviljho",
     "joe": "Deviljho",
-    "kanta": "Hornetaur",
     "keoa": "Keoaruboru",
-    "kerubi": "Kelbi",
     "kirin": "Kirin",
-    "konga": "Conga",
     "kukku": "Yian Kut-Ku",
     "kukkuao": "Blue Yian Kut-Ku",
-    "kusb": "Kusubami",
     "kusha": "Kushala Daora",
     "kushasabi": "Rusted Kushala Daora",
     "lavieg": "Berserk Laviente",
     "lavie": "Laviente",
     "levy": "Rebidiora",
     "mera": "Meraginasu",
-    "merura": "Melynx",
     "mido": "Midogaron",
     "mira": "Fatalis",
     "miraru": "White Fatalis",
     "miraval": "Crimson Fatalis",
     "mono": "Monoblos",
     "monosiro": "White Monoblos",
-    "mos": "Mosswine",
     "nalgak": "Blinking Nargacuga",
     "nalga": "Nargacuga",
     "nana": "Lunastra",
@@ -743,14 +646,9 @@
     "oo": "Chameleos",
     "paria": "Pariapuria",
     "pobol": "Poborubarumu",
-    "pokara": "Pokara",
     "pokaradon": "Pokaradon",
-    "popo": "Popo",
     "qual": "Kuarusepusu",
     "ra": "Rajang",
-    "raikou": "Great Thunderbug",
-    "ran": "Velociprey",
-    "rango": "Vespoid",
     "rao": "Lao-Shan Lung",
     "raoao": "Ashen Lao-Shan Lung",
     "reia": "Rathian",
@@ -770,7 +668,6 @@
     "tiga": "Tigrex",
     "toa": "Toa Tesukatora",
     "torid": "Toridcless",
-    "ulky": "Uruki",
     "ura": "Uragaan",
     "valsa": "Varusaburosu",
     "vol": "Lavasioth",
@@ -779,12 +676,10 @@
     "volkin": "Goruganosu",
     "yama": "Yama Tsukami",
     "yamac": "Yama Kurai",
-    "yao": "Ceanataur",
     "zena": "Zenaserisu",
     "zeruk": "Sparkling Zerureusu",
     "zeru": "Zerureusu",
     "zin": "Zinogre",
-    "zingoku": "Stygian Zinogre",
-    "disf": "Disufiroa"
+    "zingoku": "Stygian Zinogre"
   }
 }
