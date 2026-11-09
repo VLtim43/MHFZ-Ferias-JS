@@ -7,6 +7,7 @@ const vm = require("node:vm");
 const root = path.resolve(__dirname, "..");
 const original = path.join(root, "archive/ferias/sozai");
 const destination = path.join(root, "data");
+
 const context = vm.createContext({});
 
 for (const filename of ["item.js", "mos_sozai.js", "que_sozai.js", "sai_sozai.js", "buki_sozai.js", "bougu_sozai.js", "other_sozai.js"]) {
