@@ -104,7 +104,9 @@ for (const [id, quest] of Object.entries(quests.names)) {
   assert.equal(quest.sourceAnchorAvailable, new RegExp(`\\bid=["']?l${id}(?=["'\\s>])`, "i").test(html), `Quest source anchor differs: ${id}`);
   if (quest.sourceAnchorAvailable) {
     if (!packagedQuestFiles.has(quest.file)) packagedQuestFiles.set(quest.file, read(`quest-details/${quest.file}`));
-    assert.ok(packagedQuestFiles.get(quest.file)[id], `Missing local quest entry ${id}`);
+    const entry = packagedQuestFiles.get(quest.file)[id];
+    assert.ok(entry, `Missing local quest entry ${id}`);
+    assert.match(entry, new RegExp(`\\bid=["']?l${id}(?=["'\\s>])`, "i"), `Missing packaged quest anchor ${id}`);
   }
   if (quest.detailAvailable) {
     assert.match(html, new RegExp(`<th\\b[^>]*\\bid=["']?l${id}(?=["'\\s>])`, "i"), `Quest detail anchor missing: ${id}`);

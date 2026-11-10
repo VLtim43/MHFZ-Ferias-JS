@@ -202,8 +202,10 @@ function field(parent, label, value, weaponType) {
 
 function addLegacyLink(parent, label, folder, file, id) {
   const action = element("p", "actions");
-  action.append(link(label, originalPage(folder, `${file}${id ? `#l${id}` : ""}`)));
+  const original = link(label, originalPage(folder, `${file}${id ? `#l${id}` : ""}`));
+  action.append(original);
   parent.append(action);
+  return original;
 }
 
 async function questPage(id, data, version) {
@@ -212,11 +214,11 @@ async function questPage(id, data, version) {
   if (!quest) { content.append(element("h1", "", "Quest not found")); return; }
   content.append(element("h1", "", quest.title), element("p", "muted", `${quest.level} · Quest ${id}`));
   if (quest.detailAvailable === false) {
-    if (quest.sourceAvailable) addLegacyLink(content, "Original quest listing ↗", "quest", `${quest.file}.htm`, quest.sourceAnchorAvailable ? id : null);
+    const original = quest.sourceAvailable && addLegacyLink(content, "Original quest listing ↗", "quest", `${quest.file}.htm`, quest.sourceAnchorAvailable ? id : null);
     if (!quest.sourceAnchorAvailable) {
       content.append(element("p", "empty", quest.sourceAvailable
         ? "This quest is indexed, but its entry is missing from the original listing."
-        : "This quest is indexed, but its original file is missing from the archive."));
+         : "This quest is indexed, but its original source file was unavailable."));
       return;
     }
     const details = element("div", "", "Loading quest listing…");
@@ -224,9 +226,10 @@ async function questPage(id, data, version) {
     try {
       const entries = await questDetails(quest.file);
       if (version !== routeVersion) return;
-      const doc = new DOMParser().parseFromString(entries[id] || "", "text/html");
-      const source = doc.getElementById(`l${id}`);
-      const listing = source?.nextElementSibling;
+       const doc = new DOMParser().parseFromString(entries[id] || "", "text/html");
+       const source = doc.querySelector(`[id="l${id}" i]`);
+       if (source) original.href = originalPage("quest", `${quest.file}.htm#${source.id}`);
+       const listing = source?.nextElementSibling;
       if (!listing?.matches("table")) { details.textContent = "Quest listing not found in the local data."; return; }
       const panel = element("section", "panel");
       panel.append(element("h2", "", source.textContent.trim() || "Quest listing"));
@@ -252,14 +255,16 @@ async function questPage(id, data, version) {
     }
     return;
   }
-  addLegacyLink(content, "Original quest entry ↗", "quest", `${quest.file}.htm`, id);
+   const original = addLegacyLink(content, "Original quest entry ↗", "quest", `${quest.file}.htm`, id);
   const details = element("div", "", "Loading the original quest table…");
   content.append(details);
   try {
     const entries = await questDetails(quest.file);
     if (version !== routeVersion) return;
     const doc = new DOMParser().parseFromString(entries[id] || "", "text/html");
-    const header = doc.getElementById(`l${id}`)?.closest("table.mei");
+     const source = doc.querySelector(`[id="l${id}" i]`);
+     if (source) original.href = originalPage("quest", `${quest.file}.htm#${source.id}`);
+     const header = source?.closest("table.mei");
     if (!header || !header.rows[1]) { details.textContent = "Detailed entry not found in the original quest table."; return; }
     details.replaceChildren();
     const panel = element("section", "panel");
@@ -349,9 +354,9 @@ function weaponCell(value, type, index, decorate = false) {
         const destination = basename ? Object.entries(weaponFileBases).find(([, base]) => basename === base || basename.startsWith(`${base}_`))?.[0] : type;
         const id = destination && destination + part.weaponId;
         target.append(id && index[id] ? link(text, `#/weapons/${id}`) : document.createTextNode(text));
-      } else target.append(decorate ? effectText(text) : document.createTextNode(text));
+      } else target.append(weaponSkillText(text, decorate));
     }
-  } else if (value.text) target.append(decorate ? effectText(value.text) : document.createTextNode(value.text));
+  } else if (value.text) target.append(weaponSkillText(value.text, decorate));
   if (value.sharpness) target.append(weaponSharpness(value.sharpness));
   return target;
 }

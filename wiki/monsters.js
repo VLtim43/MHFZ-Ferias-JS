@@ -170,7 +170,7 @@ function showMonsterDrops(doc, target, selected, onRank, expectedRanks) {
   }
   const ranks = [...header.cells].slice(1).map(cell => cell.textContent.trim());
   if (expectedRanks && ranks.join("\u0000") !== expectedRanks.join("\u0000")) {
-    target.append(element("p", "empty", "The archived drop ranks do not match the generated index. Regenerate the wiki data before using this table."));
+     target.append(element("p", "empty", "The local drop ranks do not match the monster index. This table cannot be shown."));
     return;
   }
   const rank = ranks.includes(selected) ? selected : ranks[0];

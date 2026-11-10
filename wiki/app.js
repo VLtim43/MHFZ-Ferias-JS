@@ -1,6 +1,6 @@
 "use strict";
 
-// Generated datasets live in data/; the original sources remain untouched in archive/ferias/.
+// The wiki loads local data/ JSON and assets/ files; original-page links are external.
 let items = {};
 let ids = [];
 const content = document.getElementById("content");
@@ -110,12 +110,12 @@ function requirement(value) {
 
 function route() {
   const hash = location.hash.slice(1);
-  const match = /^\/(items|quests|weapons|monsters|armor|decorations)(?:\/([a-z0-9-]+))?(?:\?(.*))?\/?$/i.exec(hash);
+  const match = /^\/(items|quests|weapons|monsters|armor|decorations|skills)(?:\/([a-z0-9-]+))?(?:\?(.*))?\/?$/i.exec(hash);
   if (!match || (match[1] === "items" && match[2] && match[2].length !== 4) || (match[1] === "quests" && match[2] && match[2].length !== 4) || (["weapons", "armor", "decorations"].includes(match[1].toLowerCase()) && match[2] && match[2].length !== 5)) return { section: "items", query: "" };
   const search = new URLSearchParams(match[3] || "");
   const section = match[1].toLowerCase();
-  const id = ["armor", "decorations"].includes(section) ? match[2] && match[2][0] + match[2].slice(1).toUpperCase() : section === "monsters" ? match[2]?.toLowerCase() : match[2]?.toUpperCase();
-  return { section, id, query: search.get("q") || "", type: search.get("type") || "", category: search.get("category") || "", rank: search.get("rank") || "", variant: search.get("variant") || "" };
+  const id = ["armor", "decorations"].includes(section) ? match[2] && match[2][0] + match[2].slice(1).toUpperCase() : ["monsters", "skills"].includes(section) ? match[2]?.toLowerCase() : match[2]?.toUpperCase();
+  return { section, id, query: search.get("q") || "", type: search.get("type") || "", category: search.get("category") || "", rank: search.get("rank") || "", variant: search.get("variant") || "", entry: search.get("entry") || "" };
 }
 
 function listPage(query) {
@@ -452,7 +452,9 @@ function render() {
     if (active) nav.setAttribute("aria-current", "page");
     else nav.removeAttribute("aria-current");
   }
-  if (current.section === "monsters") {
+  if (current.section === "skills") {
+    skillsPage(current);
+  } else if (current.section === "monsters") {
     monsterPage(current);
   } else if (current.section === "armor" || current.section === "decorations") {
     gearPage(current);
@@ -466,7 +468,7 @@ function render() {
 }
 
 window.addEventListener("hashchange", render);
-loadData("items").then(data => {
+Promise.all([loadData("items"), loadSkills()]).then(([data]) => {
   items = data;
   ids = Object.keys(items).filter(id => items[id].name);
   render();

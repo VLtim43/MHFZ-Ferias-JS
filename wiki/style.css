@@ -79,6 +79,16 @@ p { margin: 0 0 12px; }
 .detail-field dt { background: #1c1c1c; }
 .detail-field dd { white-space: pre-line; max-height: 230px; overflow: auto; }
 .detail-field dd br { content: ""; display: block; }
+.skill-table-wrap { overflow-x: auto; margin: 8px 0 20px; }
+.skill-table { min-width: 850px; }
+.skill-table th { width: auto; white-space: nowrap; }
+.skill-table .skill-section th { background: #708090; color: #fff; font-weight: bold; }
+.skill-table .skill-group { background: #485967; min-width: 130px; }
+.skill-table .skill-effect { background: #1c1c1c; min-width: 170px; }
+.skill-table .skill-buff, .skill-table .skill-points { text-align: center; white-space: pre-line; }
+.skill-table .skill-note, .skill-table .skill-description { white-space: pre-line; }
+.skill-table .skill-selected > td { background: #34546b; }
+.skill-table .skill-selected > td:first-child { border-left: 4px solid #33b2ff; }
 .sharpness-bars { display: grid; gap: 3px; }
 .sharpness-bar { display: flex; height: 11px; width: max-content; min-width: 101px; background: #555; }
 .sharpness-bar span { height: 11px; display: block; }

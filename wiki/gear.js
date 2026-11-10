@@ -81,7 +81,7 @@ function gearListPage(current, index) {
     option.value = type;
     select.append(option);
   }
-  select.value = current.type;
+  select.value = current.type || (armor ? "" : "d");
   controls.append(search, select);
   const count = element("p", "hint");
   const results = element("div", "results");
@@ -119,17 +119,18 @@ function gearListPage(current, index) {
   update();
 }
 
-function gearValue(cell, index, decorate = false) {
+function gearValue(cell, index, decorate = false, skill = false) {
   const result = document.createDocumentFragment();
   if (!cell) return result;
+  const text = value => skill ? gearSkillText(value) : decorate ? effectText(value) : document.createTextNode(value);
   if (!cell.parts) {
-    result.append(decorate ? effectText(cell.text || "") : document.createTextNode(cell.text || ""));
+    result.append(text(cell.text || ""));
     return result;
   }
   for (const part of cell.parts) {
     if (part.itemId && items[part.itemId]) result.append(link(part.text, `#/items/${part.itemId}`));
     else if (part.gearId && index[part.gearId]) result.append(link(part.text, `#/${armorTypes.has(part.gearId[0]) ? "armor" : "decorations"}/${part.gearId}`));
-    else result.append(decorate ? effectText(part.text) : document.createTextNode(part.text));
+    else result.append(text(part.text));
   }
   return result;
 }
@@ -195,8 +196,9 @@ function gearDetailPage(current, index, version) {
         const row = element("div", "detail-field gear-stat");
         const value = element("dd");
         const decorate = /^(?:Resistance|Element|Attributes|Skills)$/i.test(record.columns[i]);
-        if (selected?.lines) for (const line of selected.lines) value.append(gearValue(line, index, decorate), document.createElement("br"));
-        else value.append(gearValue(selected, index, decorate));
+        const skill = /^Skills?$/i.test(record.columns[i]);
+        if (selected?.lines) for (const line of selected.lines) value.append(gearValue(line, index, decorate, skill), document.createElement("br"));
+        else value.append(gearValue(selected, index, decorate, skill));
         row.append(element("dt", "", record.columns[i].replace("DefenseSlot", "Defense / slots").replace("TypeﾟGR", "Type / GR")), value);
         fields.append(row);
       }
